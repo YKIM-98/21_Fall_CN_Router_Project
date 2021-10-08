@@ -134,7 +134,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		lblsrc.setBounds(383, 123, 170, 20);
 		pane.add(lblsrc);
 
-		lbldst = new JLabel("Destination Mac Address");
+		lbldst = new JLabel("Destination IP Address");
 		lbldst.setBounds(383, 182, 170, 20);
 		pane.add(lbldst);
 
