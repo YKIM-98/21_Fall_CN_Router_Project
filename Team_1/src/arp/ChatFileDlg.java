@@ -108,31 +108,31 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		ChattingArea = new JTextArea();
 		ChattingArea.setEditable(false);
 		ChattingArea.setBounds(26, 38, 345, 226);
-		pane.add(ChattingArea);// ä��
+		pane.add(ChattingArea);// 채팅
 
 		srcMacAddress = new JTextArea();
 //		srcMacAddress.setEditable(false);
 		srcMacAddress.setBounds(383, 148, 170, 24);
-		pane.add(srcMacAddress);// ������ �ּ�
+		pane.add(srcMacAddress);// 보내는 주소
 
 		dstMacAddress = new JTextArea();
 		dstMacAddress.setBounds(383, 207, 170, 24);
-		pane.add(dstMacAddress);// �޴� ��� �ּ�
+		pane.add(dstMacAddress);// 받는 사람 주소
 
 		ChattingWrite = new JTextField();
 		ChattingWrite.setBounds(26, 274, 345, 20);// 249
 		pane.add(ChattingWrite);
-		ChattingWrite.setColumns(10);// ä�� ���� ��
+		ChattingWrite.setColumns(10);// 채팅 쓰는 곳
 
 		FileDir_path = new JTextField();
 		FileDir_path.setEditable(false);
 		FileDir_path.setBounds(26, 305, 518, 20); // 280
 		pane.add(FileDir_path);
-		FileDir_path.setColumns(10);// file ���
+		FileDir_path.setColumns(10);// file 경로
 
 		lblSelectNic = new JLabel("NIC List");
 		lblSelectNic.setBounds(383, 38, 170, 20);
-		pane.add(lblSelectNic);// ����
+		pane.add(lblSelectNic);// 
 
 		lblsrc = new JLabel("Source Mac Address");
 		lblsrc.setBounds(383, 123, 170, 20);
@@ -182,7 +182,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		Setting_Button.setBounds(418, 243, 87, 20);
 		pane.add(Setting_Button);// setting
 
-		File_select_Button = new JButton("File select");// ���� ����
+		File_select_Button = new JButton("File select");// 파일 선택
 		File_select_Button.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent arg0) {
@@ -200,7 +200,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 				}
 			}
 		});
-		File_select_Button.setBounds(75, 336, 161, 21);// ���� ������ġ 280
+		File_select_Button.setBounds(75, 336, 161, 21);// 파일 선택 
 		pane.add(File_select_Button);
 
 		Chat_send_Button = new JButton("Send");
@@ -280,7 +280,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 
 		comboBox.setBounds(380, 63, 170, 24);
 		pane.add(comboBox);
-		//���� �߰��� �κе�~~~~~~~~~~~
+		// 내가 추가한 부분들~~
 		
 		hwAddress = new JTextField();
 		hwAddress.setColumns(10);
@@ -304,7 +304,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		paneG.setBounds(12, 390, 550, 136);
 		pane.add(paneG);
 		
-		//���� �߰��� �κе�~~~~~~~~~~~
+		// 내가 추가한 부분들~~
 		
 		JTextArea ChattingArea_ARP_Cache = new JTextArea();
 		ChattingArea_ARP_Cache.setEditable(false);
