@@ -44,10 +44,7 @@ public class EthernetLayer implements BaseLayer {
 	_ETHERNET_HEADER m_sHeader = new _ETHERNET_HEADER();
 
 	public EthernetLayer(String pName) {
-		// super(pName);
-		// TODO Auto-generated constructor stub
-		pLayerName = pName;
-		
+		this.pLayerName = pName;
 	}
 
 
