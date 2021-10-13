@@ -62,7 +62,7 @@ public class ChatAppLayer implements BaseLayer{
 	@Override
 	public String GetLayerName() {
 		// TODO Auto-generated method stub
-		return null;
+		return pLayerName;
 	}
 
 	@Override

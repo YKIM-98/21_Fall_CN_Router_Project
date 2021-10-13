@@ -30,7 +30,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 	String path;
 
 	private static LayerManager m_LayerMgr = new LayerManager();
-	int selected_index;
+	int selected_index = 0;	// ë¯¸ ì´ˆê¸°í™” ì‹œ ì˜¤ë¥˜
 	private JTextField ChattingWrite;
 	private JTextField FileDir_path;
     JTextField hwAddress;
@@ -72,16 +72,20 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 
 	public static void main(String[] args) {
 		m_LayerMgr.AddLayer(new NILayer("NI"));
-		
+		m_LayerMgr.AddLayer(new EthernetLayer("Ethernet"));
+		m_LayerMgr.AddLayer(new ARPLayer("ARP"));
+		m_LayerMgr.AddLayer(new IPLayer("IP"));
+		m_LayerMgr.AddLayer(new TCPLayer("TCP"));
+		m_LayerMgr.AddLayer(new ChatAppLayer("Chat"));
 		m_LayerMgr.AddLayer(new ChatFileDlg("GUI"));
-
-		//m_LayerMgr.ConnectLayers( );
+		
+		m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( *IP ( *TCP ( *Chat ( *GUI ) ) -ARP ) *ARP ) )");
 	}
 
 	public ChatFileDlg(String pName) {
 		
 		pLayerName = pName;
-		setTitle("1Á¶ ÄÄÇ»ÅÍ³×Æ®¿öÅ© ARP ÆÀÇÁ·ÎÁ§Æ®");
+		setTitle("1ì¡° ì»´í“¨í„°ë„¤íŠ¸ì›Œí¬ ARP íŒ€í”„ë¡œì íŠ¸");
 
 		setBounds(250, 250, 1351, 575);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -104,31 +108,31 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		ChattingArea = new JTextArea();
 		ChattingArea.setEditable(false);
 		ChattingArea.setBounds(26, 38, 345, 226);
-		pane.add(ChattingArea);// Ã¤ÆÃ
+		pane.add(ChattingArea);// Ã¤ï¿½ï¿½
 
 		srcMacAddress = new JTextArea();
-		srcMacAddress.setEditable(false);
+//		srcMacAddress.setEditable(false);
 		srcMacAddress.setBounds(383, 148, 170, 24);
-		pane.add(srcMacAddress);// º¸³»´Â ÁÖ¼Ò
+		pane.add(srcMacAddress);// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö¼ï¿½
 
 		dstMacAddress = new JTextArea();
 		dstMacAddress.setBounds(383, 207, 170, 24);
-		pane.add(dstMacAddress);// ¹Ş´Â »ç¶÷ ÁÖ¼Ò
+		pane.add(dstMacAddress);// ï¿½Ş´ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö¼ï¿½
 
 		ChattingWrite = new JTextField();
 		ChattingWrite.setBounds(26, 274, 345, 20);// 249
 		pane.add(ChattingWrite);
-		ChattingWrite.setColumns(10);// Ã¤ÆÃ ¾²´Â °÷
+		ChattingWrite.setColumns(10);// Ã¤ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
 
 		FileDir_path = new JTextField();
 		FileDir_path.setEditable(false);
 		FileDir_path.setBounds(26, 305, 518, 20); // 280
 		pane.add(FileDir_path);
-		FileDir_path.setColumns(10);// file °æ·Î
+		FileDir_path.setColumns(10);// file ï¿½ï¿½ï¿½
 
 		lblSelectNic = new JLabel("NIC List");
 		lblSelectNic.setBounds(383, 38, 170, 20);
-		pane.add(lblSelectNic);// ±ÛÀÚ
+		pane.add(lblSelectNic);// ï¿½ï¿½ï¿½ï¿½
 
 		lblsrc = new JLabel("Source Mac Address");
 		lblsrc.setBounds(383, 123, 170, 20);
@@ -159,8 +163,8 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 						srcAddress[i] = (byte) Integer.parseInt(byte_src[i], 16);
 					}
 
-					String[] byte_dst = dst.split("-");
-					for (int i = 0; i < 6; i++) {
+					String[] byte_dst = dst.split("\\.");	// IP addressì…ë ¥ì„ ìœ„í•œ split
+					for (int i = 0; i < 4; i++) {
 						dstAddress[i] = (byte) Integer.parseInt(byte_dst[i], 16);
 					}
 
@@ -178,13 +182,13 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		Setting_Button.setBounds(418, 243, 87, 20);
 		pane.add(Setting_Button);// setting
 
-		File_select_Button = new JButton("File select");// ÆÄÀÏ ¼±ÅÃ
+		File_select_Button = new JButton("File select");// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		File_select_Button.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent arg0) {
 				if (Setting_Button.getText() == "Reset") {
 
-					fd = new FileDialog(ChatFileDlg.this, "ÆÄÀÏ¼±ÅÃ", FileDialog.LOAD);
+					fd = new FileDialog(ChatFileDlg.this, "íŒŒì¼ì„ íƒ", FileDialog.LOAD);
 					fd.setVisible(true);
 
 					if (fd.getFile() != null) {
@@ -192,11 +196,11 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 						FileDir_path.setText("" + path);
 					}
 				} else {
-					JOptionPane.showMessageDialog(null, "ÁÖ¼Ò ¼³Á¤ ¿À·ù", "WARNING_MESSAGE", JOptionPane.WARNING_MESSAGE);
+					JOptionPane.showMessageDialog(null, "ì£¼ì†Œ ì„¤ì • ì˜¤ë¥˜", "WARNING_MESSAGE", JOptionPane.WARNING_MESSAGE);
 				}
 			}
 		});
-		File_select_Button.setBounds(75, 336, 161, 21);// ÆÄÀÏ ¼±ÅÃÀ§Ä¡ 280
+		File_select_Button.setBounds(75, 336, 161, 21);// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¡ 280
 		pane.add(File_select_Button);
 
 		Chat_send_Button = new JButton("Send");
@@ -216,7 +220,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 					m_LayerMgr.GetLayer("Chat").Send(bytes, bytes.length);
 					// p_UnderLayer.Send(bytes, bytes.length);
 				} else {
-					JOptionPane.showMessageDialog(null, "ÁÖ¼Ò ¼³Á¤ ¿À·ù");
+					JOptionPane.showMessageDialog(null, "ì£¼ì†Œ ì„¤ì • ì˜¤ë¥˜");
 				}
 			}
 		});
@@ -265,7 +269,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 				}
 
 				else {
-					JOptionPane.showMessageDialog(null, "ÁÖ¼Ò ¼³Á¤ ¿À·ù");
+					JOptionPane.showMessageDialog(null, "ì£¼ì†Œ ì„¤ì • ì˜¤ë¥˜");
 				}
 			}
 		});
@@ -276,7 +280,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 
 		comboBox.setBounds(380, 63, 170, 24);
 		pane.add(comboBox);
-		//³»°¡ Ãß°¡ÇÑ ºÎºĞµé~~~~~~~~~~~
+		//ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ÎºĞµï¿½~~~~~~~~~~~
 		
 		hwAddress = new JTextField();
 		hwAddress.setColumns(10);
@@ -300,7 +304,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		paneG.setBounds(12, 390, 550, 136);
 		pane.add(paneG);
 		
-		//³»°¡ Ãß°¡ÇÑ ºÎºĞµé~~~~~~~~~~~
+		//ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ÎºĞµï¿½~~~~~~~~~~~
 		
 		JTextArea ChattingArea_ARP_Cache = new JTextArea();
 		ChattingArea_ARP_Cache.setEditable(false);
