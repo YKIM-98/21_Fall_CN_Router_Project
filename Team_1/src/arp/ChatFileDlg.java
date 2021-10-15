@@ -18,6 +18,7 @@ import org.jnetpcap.PcapIf;
 import org.jnetpcap.packet.PcapPacket;
 import org.jnetpcap.packet.PcapPacketHandler;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.border.EtchedBorder;
 import java.awt.Color;
 
@@ -69,6 +70,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 	private JButton Proxy_Entry_Add_Button;
 	private JButton Proxy_Entry_Delete_Button;
 	private JPanel panel_2;
+	private JTable table;
 
 	public static void main(String[] args) {
 		m_LayerMgr.AddLayer(new NILayer("NI"));
@@ -96,6 +98,23 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 
 		pane.setLayout(null);
 		contentPane.add(pane);
+		
+		//	This is a table for ARP Cache
+		//	Needed in order to implement "Item Delete"
+		String header[] = {"IP주소", "MAC주소", "완료 여부"};
+		String contents[][] = {
+				{"123", "asd", "y"},
+				{"234", "zxc", "n"}
+		};
+		
+		DefaultTableModel dtm = new DefaultTableModel(contents, header);
+		table = new JTable(dtm);
+		table.setBounds(597, 66, 314, 136);
+		JScrollPane scrollpane = new JScrollPane(table);
+		scrollpane.setSize(350, 130);
+		scrollpane.setLocation(580, 50);
+//		pane.add(table);
+		pane.add(scrollpane);
 		
 		lblIpaddr_1 = new JLabel("Device");
 		lblIpaddr_1.setBounds(1009, 353, 58, 20);
@@ -309,7 +328,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		
 		JTextArea ChattingArea_ARP_Cache = new JTextArea();
 		ChattingArea_ARP_Cache.setEditable(false);
-		ChattingArea_ARP_Cache.setBounds(577, 38, 352, 386);
+		ChattingArea_ARP_Cache.setBounds(577, 293, 352, 131);
 		pane.add(ChattingArea_ARP_Cache);
 		
 		JButton Item_Delete_Button = new JButton("Item Delete");
@@ -323,6 +342,13 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		JButton All_Delete_Button = new JButton("All Delete");
 		All_Delete_Button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+//				DefaultTableModel dtm = new DefaultTableModel();
+//				table.setModel(dtm);
+//				dtm.setRowCount(0);
+//				int rowCount = dtm.getRowCount();
+//				for (int i = rowCount - 1; i > 1; i--) {
+//				    dtm.removeRow(i);
+//				}
 			}
 		});
 		All_Delete_Button.setBounds(760, 442, 161, 21);
@@ -338,13 +364,38 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		pane.add(ARPIpAddress);
 		
 		JButton ARP_Send_Button = new JButton("Send");
+		ARP_Send_Button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+//				if (Setting_Button.getText() == "Reset") {
+					String inputIP = ARPIpAddress.getText();
+					String defaultMAC = "??????????????????";
+					String isComplete = "incomplete";
+					
+					String inputString[] = new String[3];
+					inputString[0] = inputIP;
+					inputString[1] = defaultMAC;
+					inputString[2] = isComplete;
+					
+					dtm.addRow(inputString);
+//					ChattingArea_ARP_Cache.append("    " + inputIP + "    " + defaultMAC + "    " + isComplete + "\n");
+					
+					
+					
+					byte[] type = new byte[2];
+					type[0] = 0x08;
+					type[1] = 0x20;
+					//((EthernetLayer) m_LayerMgr.GetLayer("Ethernet")).SetEnetType(type);
+
+					byte[] bytes = inputIP.getBytes();
+					m_LayerMgr.GetLayer("Chat").Send(bytes, bytes.length);
+					// p_UnderLayer.Send(bytes, bytes.length);
+//				} else {
+//					JOptionPane.showMessageDialog(null, "주소 설정 오류");
+//				}
+			}
+		});
 		ARP_Send_Button.setBounds(832, 486, 97, 21);
 		pane.add(ARP_Send_Button);
-		
-		JPanel panel = new JPanel();
-		panel.setBorder(new TitledBorder(null, "ARP Cache", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel.setBounds(565, 13, 379, 513);
-		pane.add(panel);
 		
 		ChattingArea_Proxy_ARP_Entry = new JTextArea();
 		ChattingArea_Proxy_ARP_Entry.setEditable(false);
@@ -386,6 +437,11 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		panel_1.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Proxy ARP Entry", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		panel_1.setBounds(948, 13, 375, 513);
 		pane.add(panel_1);
+		
+		JPanel panel = new JPanel();
+		panel.setBorder(new TitledBorder(null, "ARP Cache", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panel.setBounds(565, 13, 379, 513);
+		pane.add(panel);
 
 		setVisible(true);
 
