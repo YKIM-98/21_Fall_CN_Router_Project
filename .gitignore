@@ -1,6 +1,15 @@
 # Compiled class file
 *.class
 
+# Eclipse Patch
+.project
+
+# Eclipse java development tools
+.classpath
+
+# Eclipse
+.settings/
+
 # Log file
 *.log
 
