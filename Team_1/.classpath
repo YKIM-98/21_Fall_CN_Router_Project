@@ -10,6 +10,6 @@
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Chat_FILE_transfer_basic"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/workbench/CN_ARP_Proj/Team_1/jnetpcap.jar"/>
+	<classpathentry kind="lib" path="jnetpcap.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

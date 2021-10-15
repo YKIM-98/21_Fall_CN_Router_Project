@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.sound.sampled.AudioFormat.Encoding;
 import javax.swing.*;
@@ -17,8 +18,11 @@ import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapIf;
 import org.jnetpcap.packet.PcapPacket;
 import org.jnetpcap.packet.PcapPacketHandler;
+
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.border.EtchedBorder;
+
 import java.awt.Color;
 
 public class ChatFileDlg extends JFrame implements BaseLayer {
@@ -69,6 +73,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 	private JButton Proxy_Entry_Add_Button;
 	private JButton Proxy_Entry_Delete_Button;
 	private JPanel panel_2;
+	private JTable Table_ARP_Cache;
 
 	public static void main(String[] args) {
 		m_LayerMgr.AddLayer(new NILayer("NI"));
@@ -96,6 +101,23 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 
 		pane.setLayout(null);
 		contentPane.add(pane);
+		
+		//	This is a table for ARP Cache
+		//	Needed in order to implement "Item Delete"
+		String header[] = {"IP주소", "MAC주소", "완료 여부"};
+		String contents[][] = {
+				{"123.123.123.123", "AA-BB-CC-11-22-33", "complete"},
+				{"234", "zxc", "n"}
+		};
+		
+		DefaultTableModel dtm = new DefaultTableModel(contents, header);
+		Table_ARP_Cache = new JTable(dtm);
+		Table_ARP_Cache.setBounds(597, 66, 314, 136);
+		JScrollPane scrollpane = new JScrollPane(Table_ARP_Cache);
+		scrollpane.setSize(350, 367);
+		scrollpane.setLocation(580, 50);
+//		pane.add(table);
+		pane.add(scrollpane);
 		
 		lblIpaddr_1 = new JLabel("Device");
 		lblIpaddr_1.setBounds(1009, 353, 58, 20);
@@ -305,16 +327,16 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		paneG.setBounds(12, 390, 550, 136);
 		pane.add(paneG);
 		
-		// 내가 추가한 부분들~~
-		
-		JTextArea ChattingArea_ARP_Cache = new JTextArea();
-		ChattingArea_ARP_Cache.setEditable(false);
-		ChattingArea_ARP_Cache.setBounds(577, 38, 352, 386);
-		pane.add(ChattingArea_ARP_Cache);
-		
 		JButton Item_Delete_Button = new JButton("Item Delete");
 		Item_Delete_Button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if(Table_ARP_Cache.getSelectedRow() == -1) {	//	getSelectedRow() returns -1 if no row is selected.
+					return;
+				}
+				else {	//	else, getSelectedRow() returns the index of the first selected row.
+					dtm.removeRow(Table_ARP_Cache.getSelectedRow());	//	Delete the selected row.
+				}
+				
 			}
 		});
 		Item_Delete_Button.setBounds(587, 442, 161, 21);
@@ -323,6 +345,9 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		JButton All_Delete_Button = new JButton("All Delete");
 		All_Delete_Button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+
+				dtm.setRowCount(0);	//	setRowCount(0) makes the DefaultTableModel (dfm) erase all the rows.
+				
 			}
 		});
 		All_Delete_Button.setBounds(760, 442, 161, 21);
@@ -338,13 +363,37 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		pane.add(ARPIpAddress);
 		
 		JButton ARP_Send_Button = new JButton("Send");
+		ARP_Send_Button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String pattern = "((\\d|[1-9]\\d|1\\d\\d|2[0-4]\\d|25[0-5])([.](?!$)|$)){4}";	// IP address pattern
+				String inputIP = ARPIpAddress.getText();
+				String defaultMAC = "????????????";
+				String isComplete = "incomplete";
+				
+				if(Pattern.matches(pattern, inputIP)){	// If inputed IP is valid pattern, continue
+					String inputString[] = new String[3];	//	Set a string array for the row to be inputed.
+					inputString[0] = inputIP;
+					inputString[1] = defaultMAC;
+					inputString[2] = isComplete;
+					
+					dtm.addRow(inputString);	//	Add a row with inputIP + default MAC, Completeness values.
+					
+					byte[] bytes = new byte[4];
+					
+					String[] ipString = inputIP.split("\\.");	// Split the string array by "\\." 
+					for(int i=0;i<4;i++){
+						bytes[i] = (byte)Integer.parseInt(ipString[i],16);	// Cast the integers to byte
+					}
+					
+					m_LayerMgr.GetLayer("TCP").Send(bytes, bytes.length);
+				}
+				else{
+					JOptionPane.showMessageDialog(null, "유효하지 않은 IP 주소");
+				}
+			}
+		});
 		ARP_Send_Button.setBounds(832, 486, 97, 21);
 		pane.add(ARP_Send_Button);
-		
-		JPanel panel = new JPanel();
-		panel.setBorder(new TitledBorder(null, "ARP Cache", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel.setBounds(565, 13, 379, 513);
-		pane.add(panel);
 		
 		ChattingArea_Proxy_ARP_Entry = new JTextArea();
 		ChattingArea_Proxy_ARP_Entry.setEditable(false);
@@ -386,6 +435,11 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		panel_1.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Proxy ARP Entry", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		panel_1.setBounds(948, 13, 375, 513);
 		pane.add(panel_1);
+		
+		JPanel panel = new JPanel();
+		panel.setBorder(new TitledBorder(null, "ARP Cache", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panel.setBounds(565, 13, 379, 513);
+		pane.add(panel);
 
 		setVisible(true);
 
