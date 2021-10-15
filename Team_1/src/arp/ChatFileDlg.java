@@ -70,7 +70,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 	private JButton Proxy_Entry_Add_Button;
 	private JButton Proxy_Entry_Delete_Button;
 	private JPanel panel_2;
-	private JTable table;
+	private JTable Table_ARP_Cache;
 
 	public static void main(String[] args) {
 		m_LayerMgr.AddLayer(new NILayer("NI"));
@@ -103,15 +103,15 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		//	Needed in order to implement "Item Delete"
 		String header[] = {"IP주소", "MAC주소", "완료 여부"};
 		String contents[][] = {
-				{"123", "asd", "y"},
+				{"123.123.123.123", "AA-BB-CC-11-22-33", "complete"},
 				{"234", "zxc", "n"}
 		};
 		
 		DefaultTableModel dtm = new DefaultTableModel(contents, header);
-		table = new JTable(dtm);
-		table.setBounds(597, 66, 314, 136);
-		JScrollPane scrollpane = new JScrollPane(table);
-		scrollpane.setSize(350, 130);
+		Table_ARP_Cache = new JTable(dtm);
+		Table_ARP_Cache.setBounds(597, 66, 314, 136);
+		JScrollPane scrollpane = new JScrollPane(Table_ARP_Cache);
+		scrollpane.setSize(350, 367);
 		scrollpane.setLocation(580, 50);
 //		pane.add(table);
 		pane.add(scrollpane);
@@ -324,16 +324,16 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		paneG.setBounds(12, 390, 550, 136);
 		pane.add(paneG);
 		
-		// 내가 추가한 부분들~~
-		
-		JTextArea ChattingArea_ARP_Cache = new JTextArea();
-		ChattingArea_ARP_Cache.setEditable(false);
-		ChattingArea_ARP_Cache.setBounds(577, 293, 352, 131);
-		pane.add(ChattingArea_ARP_Cache);
-		
 		JButton Item_Delete_Button = new JButton("Item Delete");
 		Item_Delete_Button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if(Table_ARP_Cache.getSelectedRow() == -1) {	//	getSelectedRow() returns -1 if no row is selected.
+					return;
+				}
+				else {	//	else, getSelectedRow() returns the index of the first selected row.
+					dtm.removeRow(Table_ARP_Cache.getSelectedRow());	//	Delete the selected row.
+				}
+				
 			}
 		});
 		Item_Delete_Button.setBounds(587, 442, 161, 21);
@@ -342,13 +342,9 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		JButton All_Delete_Button = new JButton("All Delete");
 		All_Delete_Button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-//				DefaultTableModel dtm = new DefaultTableModel();
-//				table.setModel(dtm);
-//				dtm.setRowCount(0);
-//				int rowCount = dtm.getRowCount();
-//				for (int i = rowCount - 1; i > 1; i--) {
-//				    dtm.removeRow(i);
-//				}
+
+				dtm.setRowCount(0);	//	setRowCount(0) makes the DefaultTableModel (dfm) erase all the rows.
+				
 			}
 		});
 		All_Delete_Button.setBounds(760, 442, 161, 21);
@@ -366,20 +362,16 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		JButton ARP_Send_Button = new JButton("Send");
 		ARP_Send_Button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-//				if (Setting_Button.getText() == "Reset") {
 					String inputIP = ARPIpAddress.getText();
 					String defaultMAC = "??????????????????";
 					String isComplete = "incomplete";
 					
-					String inputString[] = new String[3];
+					String inputString[] = new String[3];	//	Set a string array for the row to be inputed.
 					inputString[0] = inputIP;
 					inputString[1] = defaultMAC;
 					inputString[2] = isComplete;
 					
-					dtm.addRow(inputString);
-//					ChattingArea_ARP_Cache.append("    " + inputIP + "    " + defaultMAC + "    " + isComplete + "\n");
-					
-					
+					dtm.addRow(inputString);	//	Add a row with inputIP + default MAC, Completeness values.
 					
 					byte[] type = new byte[2];
 					type[0] = 0x08;
@@ -387,11 +379,11 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 					//((EthernetLayer) m_LayerMgr.GetLayer("Ethernet")).SetEnetType(type);
 
 					byte[] bytes = inputIP.getBytes();
+					
+					m_LayerMgr.GetLayer("TCP").Send(bytes, bytes.length);
+					
 					m_LayerMgr.GetLayer("Chat").Send(bytes, bytes.length);
 					// p_UnderLayer.Send(bytes, bytes.length);
-//				} else {
-//					JOptionPane.showMessageDialog(null, "주소 설정 오류");
-//				}
 			}
 		});
 		ARP_Send_Button.setBounds(832, 486, 97, 21);
