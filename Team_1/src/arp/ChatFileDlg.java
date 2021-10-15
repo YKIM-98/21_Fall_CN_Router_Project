@@ -7,6 +7,8 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -74,6 +76,8 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 	private JButton Proxy_Entry_Delete_Button;
 	private JPanel panel_2;
 	private JTable Table_ARP_Cache;
+	
+	InetAddress myIPAddress = null;
 
 	public static void main(String[] args) {
 		m_LayerMgr.AddLayer(new NILayer("NI"));
@@ -84,7 +88,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		m_LayerMgr.AddLayer(new ChatAppLayer("Chat"));
 		m_LayerMgr.AddLayer(new FileAppLayer("File"));
 		m_LayerMgr.AddLayer(new ChatFileDlg("GUI"));
-		
+				
 		m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( *IP ( *TCP ( *Chat ( *GUI ) *File ) -ARP ) *ARP ) )");
 	}
 
@@ -101,7 +105,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 
 		pane.setLayout(null);
 		contentPane.add(pane);
-		
+				
 		//	This is a table for ARP Cache
 		//	Needed in order to implement "Item Delete"
 		String header[] = {"IP주소", "MAC주소", "완료 여부"};
@@ -198,6 +202,15 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 
 					Setting_Button.setText("Reset");
 					dstMacAddress.setEditable(false);
+					
+					try {
+						myIPAddress = InetAddress.getLocalHost();
+					} catch (UnknownHostException e) {
+						e.printStackTrace();
+					}
+					System.out.println("IP of my system is := " + myIPAddress.getHostAddress());	//	Just for debugging
+					ChattingArea.append("IP of my system is := " + myIPAddress.getHostAddress() + "\n");	//	Show host IP.
+
 				}
 
 			}
@@ -511,6 +524,14 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		this.SetUpperLayer(pUULayer);
 		pUULayer.SetUnderLayer(this);
 
+	}
+
+	public InetAddress getMyIPAddress() {
+		return myIPAddress;
+	}
+
+	public void setMyIPAddress(InetAddress myIPAddress) {
+		this.myIPAddress = myIPAddress;
 	}
 }
 
