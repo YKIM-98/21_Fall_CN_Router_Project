@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.sound.sampled.AudioFormat.Encoding;
 import javax.swing.*;
@@ -17,9 +18,11 @@ import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapIf;
 import org.jnetpcap.packet.PcapPacket;
 import org.jnetpcap.packet.PcapPacketHandler;
+
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.border.EtchedBorder;
+
 import java.awt.Color;
 
 public class ChatFileDlg extends JFrame implements BaseLayer {
@@ -362,10 +365,12 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		JButton ARP_Send_Button = new JButton("Send");
 		ARP_Send_Button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-					String inputIP = ARPIpAddress.getText();
-					String defaultMAC = "??????????????????";
-					String isComplete = "incomplete";
-					
+				String pattern = "((\\d|[1-9]\\d|1\\d\\d|2[0-4]\\d|25[0-5])([.](?!$)|$)){4}";	// IP address pattern
+				String inputIP = ARPIpAddress.getText();
+				String defaultMAC = "????????????";
+				String isComplete = "incomplete";
+				
+				if(Pattern.matches(pattern, inputIP)){	// If inputed IP is valid pattern, continue
 					String inputString[] = new String[3];	//	Set a string array for the row to be inputed.
 					inputString[0] = inputIP;
 					inputString[1] = defaultMAC;
@@ -373,17 +378,18 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 					
 					dtm.addRow(inputString);	//	Add a row with inputIP + default MAC, Completeness values.
 					
-					byte[] type = new byte[2];
-					type[0] = 0x08;
-					type[1] = 0x20;
-					//((EthernetLayer) m_LayerMgr.GetLayer("Ethernet")).SetEnetType(type);
-
-					byte[] bytes = inputIP.getBytes();
+					byte[] bytes = new byte[4];
+					
+					String[] ipString = inputIP.split("\\.");	// Split the string array by "\\." 
+					for(int i=0;i<4;i++){
+						bytes[i] = (byte)Integer.parseInt(ipString[i],16);	// Cast the integers to byte
+					}
 					
 					m_LayerMgr.GetLayer("TCP").Send(bytes, bytes.length);
-					
-					m_LayerMgr.GetLayer("Chat").Send(bytes, bytes.length);
-					// p_UnderLayer.Send(bytes, bytes.length);
+				}
+				else{
+					JOptionPane.showMessageDialog(null, "유효하지 않은 IP 주소");
+				}
 			}
 		});
 		ARP_Send_Button.setBounds(832, 486, 97, 21);
