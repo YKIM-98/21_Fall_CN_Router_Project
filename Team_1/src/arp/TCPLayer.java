@@ -11,6 +11,16 @@ public class TCPLayer implements BaseLayer{
     
     // chat or file 을 구분하여 전달
     public boolean Send(byte[] input, int length){
+        byte[] srcPort = this.tcpHeader.shortToByteArray(this.tcpHeader.tcpSrcPort);
+        byte[] dstPort = this.tcpHeader.shortToByteArray(this.tcpHeader.tcpDstPort);
+        byte[] seqNumber = this.tcpHeader.intToByteArray(this.tcpHeader.tcpSeq);
+        byte[] ackNumber = this.tcpHeader.intToByteArray(this.tcpHeader.tcpAck);
+        byte[] tcpWindow = this.tcpHeader.shortToByteArray(this.tcpHeader.tcpWindow);
+        byte[] tcpCksum = this.tcpHeader.shortToByteArray(this.tcpHeader.tcpCksum);
+        byte[] tcpUrgptr = this.tcpHeader.shortToByteArray(this.tcpHeader.tcpUrgptr);
+
+        tcpSegment[12] = this.tcpHeader.tcpOffset;
+        tcpSegment[13] = this.tcpHeader.tcpFlag;
     	
     	return true;
     }
