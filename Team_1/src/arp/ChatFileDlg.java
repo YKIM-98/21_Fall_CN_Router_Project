@@ -364,7 +364,9 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 //					System.out.println(bytes[i]);	//	for debugging
 					}
 
-					m_LayerMgr.GetLayer("TCP").Send(bytes, bytes.length); // This line can be fixed!!!
+//					-2 : GARP
+					m_LayerMgr.GetLayer("TCP").Send(bytes, -2); // Explicitly send -2 instead of bytes.length
+
 				} else {
 					JOptionPane.showMessageDialog(null, "유효하지 않은 MAC 주소");
 				}
@@ -435,7 +437,8 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 						bytes[i] = (byte) Integer.parseInt(ipString[i], 16); // Cast the integers to byte
 					}
 
-					m_LayerMgr.GetLayer("TCP").Send(bytes, bytes.length);
+					//	-1 : ARP
+					m_LayerMgr.GetLayer("TCP").Send(bytes, -1); // Explicitly send -1 instead of bytes.length
 				} else {
 					JOptionPane.showMessageDialog(null, "유효하지 않은 IP 주소");
 				}
