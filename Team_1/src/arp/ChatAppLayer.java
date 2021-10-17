@@ -21,6 +21,13 @@ public class ChatAppLayer implements BaseLayer{
 			this.capp_data = null;
 		}
 	}
+
+    private byte[] totalLength(int lengthOfStr) {
+        byte[] totalLength = new byte[2];
+        totalLength[0] = (byte) ((lengthOfStr & 0xFF00) >> 8);
+        totalLength[1] = (byte) (lengthOfStr & 0xFF);
+        return totalLength;
+    }
 	
 	_CAPP_HEADER m_sHeader = new _CAPP_HEADER();
 	
@@ -40,14 +47,31 @@ public class ChatAppLayer implements BaseLayer{
 		m_sHeader.capp_data = null;	
 	}
 	
-	public byte[] ObjToByte(_CAPP_HEADER Header, byte[] input, int length){
-	
-		return null;		
-	}
+    private byte[] objectToByte(byte[] input, int length, byte[] totlen, byte type) {
+        byte[] sendData = new byte[length + 4];
+        sendData[0] = totlen[0];
+        sendData[1] = totlen[1];
+        sendData[2] = type;
+        sendData[3] = 0x00;
+
+        if (length >= 0) {
+            System.arraycopy(input, 0, sendData, 4, length);
+        }
+
+        return sendData;
+    }
 	
     public boolean Send(byte[] input, int length) {     	 
-    	
-		return false;
+        byte[] totalLength = this.totalLength(length);	// char context length
+        byte type = 0x00;
+        byte[] sendData = this.objectToByte(input, length, totalLength, type);
+        /* sendData 
+         * 0~1 : context length
+         * 2 : type (chat - 0)
+         * 3 : unused
+         * 4~1456 : data
+        */
+        return this.GetUnderLayer().Send(sendData, sendData.length);
 	}
 //    
 //    public byte[] RemoveCappHeader(byte[] input, int length){
@@ -67,27 +91,36 @@ public class ChatAppLayer implements BaseLayer{
 
 	@Override
 	public BaseLayer GetUnderLayer() {
-		return null;
+        if (p_UnderLayer == null)
+            return null;
+        return p_UnderLayer;
 	}
 
 	@Override
 	public BaseLayer GetUpperLayer(int nindex) {
-		return null;
+        if (nindex < 0 || nindex > nUpperLayerCount || nUpperLayerCount < 0)
+            return null;
+        return p_aUpperLayer.get(nindex);
 	}
 
 	@Override
 	public void SetUnderLayer(BaseLayer pUnderLayer) {
-
+        if (pUnderLayer == null)
+            return;
+        this.p_UnderLayer = pUnderLayer;
 	}
 
 	@Override
 	public void SetUpperLayer(BaseLayer pUpperLayer) {
-	
+        if (pUpperLayer == null)
+            return;
+        this.p_aUpperLayer.add(nUpperLayerCount++, pUpperLayer);//layer추가	
 	}
 
 	@Override
 	public void SetUpperUnderLayer(BaseLayer pUULayer) {
-			
+        this.SetUpperLayer(pUULayer);
+        pUULayer.SetUnderLayer(this);			
 	}
 
 }

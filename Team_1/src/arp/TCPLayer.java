@@ -9,15 +9,42 @@ public class TCPLayer implements BaseLayer{
     public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();    
     private TCPHeader tcpHeader;
     
-    // chat or file 을 구분하여 전달
     public boolean Send(byte[] input, int length){
-    	
-    	return true;
+        int resultLength = input.length;	// chatApp data(+header) length
+
+        byte[] tcpSegment = new byte[resultLength + 24];
+        this.inputHeaderData(tcpSegment, input);
+        
+        if (length == -1 || length == -2) {	// ARP or GARP 
+            return this.GetUnderLayer().Send(tcpSegment, length);
+        }
+        return this.GetUnderLayer().Send(tcpSegment, tcpSegment.length);
     }
     
-    // header 설정
+    // header setting
     private void inputHeaderData(byte[] tcpSegment, byte[] data) {
+        byte[] srcPort = this.tcpHeader.shortToByteArray(this.tcpHeader.tcpSrcPort);
+        byte[] dstPort = this.tcpHeader.shortToByteArray(this.tcpHeader.tcpDstPort);
+        byte[] seqNumber = this.tcpHeader.intToByteArray(this.tcpHeader.tcpSeq);
+        byte[] ackNumber = this.tcpHeader.intToByteArray(this.tcpHeader.tcpAck);
+        byte[] tcpWindow = this.tcpHeader.shortToByteArray(this.tcpHeader.tcpWindow);
+        byte[] tcpCksum = this.tcpHeader.shortToByteArray(this.tcpHeader.tcpCksum);
+        byte[] tcpUrgptr = this.tcpHeader.shortToByteArray(this.tcpHeader.tcpUrgptr);
+
+        // only zero
+        System.arraycopy(srcPort,0,tcpSegment,0,2);
+        System.arraycopy(dstPort,0,tcpSegment,2,2);
+        System.arraycopy(seqNumber,0,tcpSegment,4,4);
+        System.arraycopy(ackNumber,0,tcpSegment,8,4);
+        tcpSegment[12] = this.tcpHeader.tcpOffset;
+        tcpSegment[13] = this.tcpHeader.tcpFlag;
+        System.arraycopy(tcpWindow,0,tcpSegment,14,2);
+        System.arraycopy(tcpCksum,0,tcpSegment,16,2);
+        System.arraycopy(tcpUrgptr,0,tcpSegment,18,2);
+        System.arraycopy(this.tcpHeader.padding,0,tcpSegment,20,4);
+        System.arraycopy(data,0,tcpSegment,24,data.length);
     }
+
     
     // 상위 레이어에 header를 제거한 데이터 전달
     public boolean Receive(byte[] input) {
