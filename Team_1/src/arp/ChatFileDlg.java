@@ -76,6 +76,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 	private JTable Table_ARP_Cache;
 
 	InetAddress myIPAddress = null;
+	private byte[] targetIPAddress = new byte[4];
 	private JTable Table_PARP_Entry;
 
 	public static void main(String[] args) {
@@ -88,7 +89,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		m_LayerMgr.AddLayer(new FileAppLayer("File"));
 		m_LayerMgr.AddLayer(new ChatFileDlg("GUI"));
 
-		m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( *IP ( *TCP ( *Chat ( *GUI ) *File ) -ARP ) *ARP ) )");
+		m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( *IP ( *TCP ( *Chat ( *GUI ) *File ( *GUI ) ) -ARP ) *ARP ) )");
 	}
 
 	public ChatFileDlg(String pName) {
@@ -212,6 +213,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 					for (int i = 0; i < 4; i++) {
 						dstAddress[i] = (byte) Integer.parseInt(byte_dst[i], 16);
 					}
+					System.arraycopy(dstAddress, 0, targetIPAddress, 0, 4);
 
 //					((EthernetLayer) m_LayerMgr.GetLayer("Ethernet")).SetEnetSrcAddress(srcAddress);
 //					((EthernetLayer) m_LayerMgr.GetLayer("Ethernet")).SetEnetDstAddress(dstAddress);
@@ -600,4 +602,17 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 	public void setMyIPAddress(InetAddress myIPAddress) {
 		this.myIPAddress = myIPAddress;
 	}
+	// myIp to byte array
+	public byte[] InetToByte(InetAddress address){
+		return address.getAddress();
+	}
+
+	public byte[] getTargetIPAddress() {
+		// TODO Auto-generated method stub
+		return targetIPAddress;
+	}
+
+	public void setTargetIPAddress(byte[] targetIPAddress) {
+		this.targetIPAddress = targetIPAddress;
+	}	
 }
