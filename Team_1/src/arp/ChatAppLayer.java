@@ -73,14 +73,12 @@ public class ChatAppLayer implements BaseLayer{
         */
         return this.GetUnderLayer().Send(sendData, sendData.length);
 	}
-//    
-//    public byte[] RemoveCappHeader(byte[] input, int length){
-//    
-//    }
            
 	public boolean Receive(byte[] input){
-	
-		return true;
+		int length = input.length;
+		byte [] removedHeader = new byte[input.length-4];
+		System.arraycopy(input, 4, removedHeader, 0, input.length-4);
+		return this.GetUpperLayer(0).Receive(removedHeader);
 	}
 
 	@Override

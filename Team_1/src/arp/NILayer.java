@@ -140,6 +140,8 @@ class Receive_Thread implements Runnable {
 			PcapPacketHandler<String> jpacketHandler = new PcapPacketHandler<String>() {
 				public void nextPacket(PcapPacket packet, String user) {
 					data = packet.getByteArray(0, packet.size());
+//					byte[] temp = ((ChatFileDlg) UpperLayer.GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0)).myMacByte;
+//					System.arraycopy(temp, 0, data, 0, 6);
 					UpperLayer.Receive(data);
 				}
 			};
