@@ -393,8 +393,8 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 			}
 		});
 
-		NIC_select_Button.setBounds(418, 94, 87, 23);
-		//pane.add(NIC_select_Button);
+		NIC_select_Button.setBounds(400, 459, 87, 23);
+		pane.add(NIC_select_Button);
 		
 
 		/*File_select_Button = new JButton("File select");// 파일 선택
@@ -442,9 +442,9 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		pane.add(File_send_Button);*/
 
 		comboBox = new JComboBox();
-
-		comboBox.setBounds(380, 63, 170, 24);
-		//pane.add(comboBox);
+		comboBox.setBounds(220, 460, 161, 20);
+//		comboBox.setBounds(380, 63, 170, 24);
+		pane.add(comboBox);
 
 		hwAddress = new JTextField();
 		hwAddress.setColumns(10);
@@ -733,9 +733,9 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		lblInterface.setBounds(121, 459, 85, 18);
 		pane.add(lblInterface);
 		
-		JComboBox comboBox_1 = new JComboBox();
-		comboBox_1.setBounds(220, 460, 161, 20);
-		pane.add(comboBox_1);
+//		JComboBox comboBox_1 = new JComboBox();
+//		comboBox_1.setBounds(220, 460, 161, 20);
+//		pane.add(comboBox_1);
 		
 		JButton btnNewButton_1_1 = new JButton("Add");
 		btnNewButton_1_1.addActionListener(new ActionListener() {
@@ -755,10 +755,10 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 				if(isGateway) tmpCheckBox += "G";
 				if(isHost) tmpCheckBox += "H";
 				inputString[3] = tmpCheckBox;
-				inputString[4] = "port1(hard coded)";
+				inputString[4] = comboBox.getSelectedItem().toString();
 				inputString[5] = "1(hard coded)";
 				
-				dtm_Routing.addRow(inputString); // Add a row with inputDevice + inputIP + inputMAC values.
+				dtm_Routing.addRow(inputString); // Add a row with values.
 
 				textArea_Destination.setText("");
 				textArea_Netmask.setText("");
