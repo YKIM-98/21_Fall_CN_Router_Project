@@ -7,7 +7,7 @@ public class ARPLayer implements BaseLayer {
 	public BaseLayer p_UnderLayer = null;
 	public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
 	public String pLayerName = null;
-	ChatFileDlg dlg;
+	RoutingDlg dlg;
 	public ARPLayer(String name) {
 		this.pLayerName = name;
 	}
@@ -90,7 +90,7 @@ public class ARPLayer implements BaseLayer {
 		byte[] src_ip_address = Arrays.copyOfRange(input, 14, 18);
 		byte[] dst_ip_address = Arrays.copyOfRange(input, 24, 28);
 		
-		dlg = ((ChatFileDlg) this.GetUnderLayer().GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0));
+		dlg = ((RoutingDlg) this.GetUnderLayer().GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0));
 		byte[] myIP = dlg.getMyIPAddress().getAddress(); // No intelligence copy
 
 		if (opcode[0] == 0x00 && opcode[1] == 0x01) { // if ARP request
@@ -234,7 +234,7 @@ public class ARPLayer implements BaseLayer {
 		
 		if (Arrays.equals(srcIp, dstIp)) {//GARP	
 			// srcMac = dlg.srcMac(바뀐 맥 주소)
-			dlg = ((ChatFileDlg) this.GetUnderLayer().GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0));
+			dlg = ((RoutingDlg) this.GetUnderLayer().GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0));
 			byte[] bytes = new byte[6];
 
 			String[] macString = dlg.hwAddress.getText().split("\\-"); // Split the string array by "\\-"

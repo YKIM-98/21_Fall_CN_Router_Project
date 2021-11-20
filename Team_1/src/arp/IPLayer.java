@@ -12,7 +12,7 @@ public class IPLayer implements BaseLayer{
     public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();    
 	public String pLayerName = null;
 	private _IP_Header ip_header = new _IP_Header();
-	ChatFileDlg dlg;
+	RoutingDlg dlg;
 
 	public IPLayer(String pName){
 		pLayerName = pName;
@@ -60,7 +60,7 @@ public class IPLayer implements BaseLayer{
 		int resultLength = input.length;
 	    this.ip_header.ip_dstaddr.addr = new byte[4];
 		this.ip_header.ip_srcaddr.addr = new byte[4];
-		dlg = ((ChatFileDlg) this.GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0));
+		dlg = ((RoutingDlg) this.GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0));
 		
 		byte [] my_ip = dlg.getMyIPAddress().getAddress();
 		SetIpSrcAddress(my_ip);
@@ -123,7 +123,7 @@ public class IPLayer implements BaseLayer{
         }
         
         int packet_tot_len = ((input[2] << 8) & 0xFF00) + input[3] & 0xFF;
-        byte [] my_ip_address = ((ChatFileDlg) this.GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0)).getMyIPAddress().getAddress();
+        byte [] my_ip_address = ((RoutingDlg) this.GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0)).getMyIPAddress().getAddress();
         for (int addr_index_count = 0; addr_index_count < 4; addr_index_count++) {
             if (my_ip_address[addr_index_count] != input[16 + addr_index_count]) {
                 return this.GetUnderLayer(0).Send(input, packet_tot_len);

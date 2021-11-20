@@ -4,6 +4,8 @@ import java.awt.Container;
 import java.awt.FileDialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -30,7 +32,7 @@ import java.awt.Color;
 import java.awt.Component;
 import javax.swing.border.MatteBorder;
 
-public class ChatFileDlg extends JFrame implements BaseLayer {
+public class RoutingDlg extends JFrame implements BaseLayer {
 	public int nUpperLayerCount = 0;
 	public String pLayerName = null;
 	public BaseLayer p_UnderLayer = null;
@@ -86,6 +88,11 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 	
 	String inputARPIP ="";	//for ARP
 	String ARPorChat="";
+	
+	//	For checkboxes
+	Boolean isUp = false;
+	Boolean isGateway = false;
+	Boolean isHost = false;
 
 	public static void main(String[] args) {
 		m_LayerMgr.AddLayer(new NILayer("NI"));
@@ -95,7 +102,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		m_LayerMgr.AddLayer(new TCPLayer("TCP"));
 		m_LayerMgr.AddLayer(new ChatAppLayer("Chat"));
 		m_LayerMgr.AddLayer(new FileAppLayer("File"));
-		m_LayerMgr.AddLayer(new ChatFileDlg("GUI"));
+		m_LayerMgr.AddLayer(new RoutingDlg("GUI"));
 
 		m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( *IP ( *TCP ( *Chat ( *GUI ) *File ( *GUI ) ) -ARP ) *ARP ) )");
 	}
@@ -153,7 +160,7 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 	      return mac;
 	}
 	
-	public ChatFileDlg(String pName) {
+	public RoutingDlg(String pName) {
 		
 		//주소 초기화
 		((ARPLayer) m_LayerMgr.GetLayer("ARP")).SetSrcMac(getLocalMacAddress());
@@ -628,14 +635,8 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		String contents_Routing_Cache[][] = {{"111.222.333.44","255.255.255.1","255.255.255.1","g","port1","10"}};
 		
 		dtm_Routing = new DefaultTableModel(contents_Routing_Cache, header_Routing_Cache);
-		Table_Routing_Cache = new JTable(new DefaultTableModel(
-			new Object[][] {
-				{"111.222.333.44", "255.255.255.1", "255.255.255.1", "g", "port1", "10"},
-			},
-			new String[] {
-				"Destination", "Netmask", "Gateway", "Flag", "Interface", "Metric"
-			}
-		));
+		Table_Routing_Cache = new JTable(dtm_Routing);
+
 		Table_Routing_Cache.setBounds(21, 36, 530, 284);
 		JScrollPane scrollpane_Routing = new JScrollPane(Table_Routing_Cache);
 		scrollpane_Routing.setBounds(25, 50, 526, 275);
@@ -644,34 +645,73 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		JButton btnNewButton_1 = new JButton("Delete");
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if (Table_Routing_Cache.getSelectedRow() == -1) { // getSelectedRow() returns -1 if no row is selected.
+					return;
+				} else { // else, getSelectedRow() returns the index of the first selected row.
+					dtm_Routing.removeRow(Table_Routing_Cache.getSelectedRow()); // Delete the selected row.
+				}
 			}
 		});
 		btnNewButton_1.setBounds(323, 487, 105, 27);
 		pane.add(btnNewButton_1);
 		
-		JTextArea textArea = new JTextArea();
-		textArea.setBounds(220, 332, 233, 27);
-		pane.add(textArea);
+		JTextArea textArea_Destination = new JTextArea();
+		textArea_Destination.setBounds(220, 332, 233, 27);
+		pane.add(textArea_Destination);
 		
-		JTextArea textArea_1 = new JTextArea();
-		textArea_1.setBounds(220, 365, 233, 27);
-		pane.add(textArea_1);
+		JTextArea textArea_Netmask = new JTextArea();
+		textArea_Netmask.setBounds(220, 365, 233, 27);
+		pane.add(textArea_Netmask);
 		
-		JTextArea textArea_2 = new JTextArea();
-		textArea_2.setBounds(220, 399, 233, 27);
-		pane.add(textArea_2);
+		JTextArea textArea_Gateway = new JTextArea();
+		textArea_Gateway.setBounds(220, 399, 233, 27);
+		pane.add(textArea_Gateway);
 		
-		JCheckBox chckbxNewCheckBox = new JCheckBox("UP");
-		chckbxNewCheckBox.setBounds(220, 427, 49, 27);
-		pane.add(chckbxNewCheckBox);
+
+		JCheckBox checkBox_Up = new JCheckBox("UP");
+		checkBox_Up.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				// TODO Auto-generated method stub
+				if (e.getStateChange() == 1) {
+                    isUp = true;
+                } else {
+                	isUp = false;
+                }
+			}
+        });
+		checkBox_Up.setBounds(220, 427, 49, 27);
+		pane.add(checkBox_Up);
 		
-		JCheckBox chckbxGateway = new JCheckBox("Gateway");
-		chckbxGateway.setBounds(286, 427, 85, 27);
-		pane.add(chckbxGateway);
+		JCheckBox checkBox_Gateway = new JCheckBox("Gateway");
+		checkBox_Gateway.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				// TODO Auto-generated method stub
+				if (e.getStateChange() == 1) {
+                    isGateway = true;
+                } else {
+                	isGateway = false;
+                }
+			}
+        });
+		checkBox_Gateway.setBounds(286, 427, 85, 27);
+		pane.add(checkBox_Gateway);
 		
-		JCheckBox chckbxHost = new JCheckBox("Host");
-		chckbxHost.setBounds(387, 427, 66, 27);
-		pane.add(chckbxHost);
+		JCheckBox checkBox_Host = new JCheckBox("Host");
+		checkBox_Host.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				// TODO Auto-generated method stub
+				if (e.getStateChange() == 1) {
+                    isHost = true;
+                } else {
+                	isHost = false;
+                }
+			}
+        });
+		checkBox_Host.setBounds(387, 427, 66, 27);
+		pane.add(checkBox_Host);
 		
 		JLabel lblNewLabel = new JLabel("Destination");
 		lblNewLabel.setBounds(121, 332, 85, 18);
@@ -698,6 +738,36 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		pane.add(comboBox_1);
 		
 		JButton btnNewButton_1_1 = new JButton("Add");
+		btnNewButton_1_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// Add data to PARP Entry
+				String inputDestination = textArea_Destination.getText();
+				String inputNetmask = textArea_Netmask.getText();
+				String inputGateway = textArea_Gateway.getText();
+				String tmpCheckBox = "";
+				
+				String inputString[] = new String[6]; // Set a string array for the row to be inputed.
+				inputString[0] = inputDestination;
+				inputString[1] = inputNetmask;
+				inputString[2] = inputGateway;
+				
+				if(isUp) tmpCheckBox += "U";
+				if(isGateway) tmpCheckBox += "G";
+				if(isHost) tmpCheckBox += "H";
+				inputString[3] = tmpCheckBox;
+				inputString[4] = "port1(hard coded)";
+				inputString[5] = "1(hard coded)";
+				
+				dtm_Routing.addRow(inputString); // Add a row with inputDevice + inputIP + inputMAC values.
+
+				textArea_Destination.setText("");
+				textArea_Netmask.setText("");
+				textArea_Gateway.setText("");
+				checkBox_Up.setSelected(false);
+				checkBox_Gateway.setSelected(false);
+				checkBox_Host.setSelected(false);
+			}
+		});
 		btnNewButton_1_1.setBounds(190, 487, 105, 27);
 		pane.add(btnNewButton_1_1);
 		panel_3.setBorder(new TitledBorder(null, "Static Routing Table", TitledBorder.LEADING, TitledBorder.TOP, null, null));
