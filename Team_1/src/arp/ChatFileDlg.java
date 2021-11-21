@@ -78,10 +78,12 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 	private JPanel panel_2;
 	private JPanel panel_2_1;
 	private JTable Table_ARP_Cache;
-
+	private JTable Table_Routing_Cache;
+	
 	InetAddress myIPAddress = null;
 	private byte[] targetIPAddress = new byte[4];
 	private JTable Table_PARP_Entry;
+	
 	String inputARPIP ="";	//for ARP
 	String ARPorChat="";
 
@@ -102,9 +104,9 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 	DefaultTableModel dtm_Routing;
 	DefaultTableModel dtm_ARP;
 	DefaultTableModel dtm_PARP;
+	
 	String myMac;
 	public byte[] myMacByte = new byte[6];
-	private JTable table;
 	private final JPanel panel_3 = new JPanel();
 	
 	public void setValueOfDTM_ARP(Object aValue, int row, int col) {
@@ -622,23 +624,22 @@ public class ChatFileDlg extends JFrame implements BaseLayer {
 		//pane.add(panel_2);
 		//@@@@@@@@@@@@@
 		
-		JButton btnNewButton = new JButton("Add");
-		panel_2_1.add(btnNewButton);
-		btnNewButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
+		String header_Routing_Cache[] = {"Destination", "Netmask", "Gateway", "Flag", "Interface", "Metric"};
+		String contents_Routing_Cache[][] = {{"111.222.333.44","255.255.255.1","255.255.255.1","g","port1","10"}};
 		
-		table = new JTable();
-		table.setModel(new DefaultTableModel(
+		dtm_Routing = new DefaultTableModel(contents_Routing_Cache, header_Routing_Cache);
+		Table_Routing_Cache = new JTable(new DefaultTableModel(
 			new Object[][] {
+				{"111.222.333.44", "255.255.255.1", "255.255.255.1", "g", "port1", "10"},
 			},
 			new String[] {
 				"Destination", "Netmask", "Gateway", "Flag", "Interface", "Metric"
 			}
 		));
-		table.setBounds(21, 36, 530, 284);
-		pane.add(table);
+		Table_Routing_Cache.setBounds(21, 36, 530, 284);
+		JScrollPane scrollpane_Routing = new JScrollPane(Table_Routing_Cache);
+		scrollpane_Routing.setBounds(25, 50, 526, 275);
+		pane.add(scrollpane_Routing);
 		
 		JButton btnNewButton_1 = new JButton("Delete");
 		btnNewButton_1.addActionListener(new ActionListener() {
