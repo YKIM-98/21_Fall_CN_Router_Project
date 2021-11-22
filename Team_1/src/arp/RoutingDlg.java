@@ -204,11 +204,9 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		m_LayerMgr.AddLayer(new ARPLayer("ARP"));
 		m_LayerMgr.AddLayer(new IPLayer("IP"));
 		m_LayerMgr.AddLayer(new TCPLayer("TCP"));
-		m_LayerMgr.AddLayer(new ChatAppLayer("Chat"));
-		m_LayerMgr.AddLayer(new FileAppLayer("File"));
 		m_LayerMgr.AddLayer(new RoutingDlg("GUI"));
 
-		m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( *IP ( *TCP ( *Chat ( *GUI ) *File ( *GUI ) ) -ARP ) *ARP ) )");
+		m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( *IP ( *TCP ( *GUI ) -ARP ) *ARP ) )");
 	}
 	
 	//	For the purpose of table edit.

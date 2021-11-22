@@ -195,4 +195,28 @@ public class IPLayer implements BaseLayer{
         ip_header.ip_dstaddr.addr = dstAddress;
 
     }
+    public static String subnetting(String input, String mask) {
+        byte[] inputByte = ip2Byte(input);
+        byte[] maskByte = ip2Byte(mask);
+        byte[] masking = new byte[4];
+        for(int idx = 0; idx < 4; idx++) {
+           masking[idx] = (byte) (inputByte[idx] & maskByte[idx]);
+        }
+        return ip2String(masking);
+     }
+      public static byte[] ip2Byte(String ip) {
+         String[] ipBuf = ip.split("\\.");
+         byte[] buf = new byte[4];
+         for(int i = 0; i < 4; i++) {
+            buf[i] = (byte) Integer.parseInt(ipBuf[i]);
+         }
+         return buf;
+      }
+      public static String ip2String(byte[] ip) {
+        String ipAddress = "";
+        for (byte b : ip) {
+           ipAddress += Integer.toString(b & 0xFF) + ".";
+        }
+        return ipAddress.substring(0, ipAddress.length() - 1);
+     }    
 }
