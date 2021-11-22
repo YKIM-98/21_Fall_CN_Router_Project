@@ -93,17 +93,17 @@ public class EthernetLayer implements BaseLayer {
 	// not complete
 	public synchronized boolean Receive(byte[] input) {
 	      int frameType = byte2ToInt(input[12], input[13]);
-	      if((isBroadcast(input) || isMyAddr(input)) && !isMyFrame(input)){
+//	      if((isBroadcast(input) || isMyAddr(input)) && !isMyFrame(input)){
 	            if (frameType == 0x0806) {//상위 ARP로 전송
 	                input = RemoveEthernetHeader(input, input.length);
-	                GetUpperLayer(1).Receive(input);
-	                return true;
-	             } else if (frameType == 0x0800) {//상위 IP로 전송
+	                if (GetUpperLayer(1).Receive(input))
+	                	return true;
+            	} else if (frameType == 0x0800) {//상위 IP로 전송 ICMP
 	                input = RemoveEthernetHeader(input, input.length);
-	                GetUpperLayer(0).Receive(input);
-	                return true;
+	                if (GetUpperLayer(0).Receive(input))	// SCMP 수신에 의한 false 가능성
+	                	return true;
 	             }
-	         }	      
+//	         }	      
 	      return false;
 	   }
 
