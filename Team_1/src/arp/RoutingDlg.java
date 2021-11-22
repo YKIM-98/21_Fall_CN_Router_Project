@@ -14,6 +14,7 @@ import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.regex.Pattern;
 
 import javax.sound.sampled.AudioFormat.Encoding;
@@ -30,7 +31,9 @@ import javax.swing.border.EtchedBorder;
 
 import java.awt.Color;
 import java.awt.Component;
+
 import javax.swing.border.MatteBorder;
+
 
 public class RoutingDlg extends JFrame implements BaseLayer {
 	public int nUpperLayerCount = 0;
@@ -39,9 +42,16 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 	public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
 
 	String path;
+	
+	// for two interface
+	static IPLayer[] ipLayer = new IPLayer[2];
+	static ARPLayer[] arpLayer = new ARPLayer[2];
+	static EthernetLayer[] ethernetLayer = new EthernetLayer[2];
+	static NILayer[] niLayer = new NILayer[2];
 
 	private static LayerManager m_LayerMgr = new LayerManager();
-	int selected_index = 0; // 미 초기화 시 오류
+	int selected_index1 = 0; 
+	int selected_index2 = 0; 
 	private JTextField ChattingWrite;
 	private JTextField FileDir_path;
 	JTextField hwAddress;
@@ -64,7 +74,9 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 	JButton File_send_Button;
 	JButton HwAddress_send_Button;
 
-	JComboBox comboBox;
+	JComboBox NIC_combobox1;
+	JComboBox NIC_combobox2;
+		
 
 	FileDialog fd;
 	private JTextField ARPIpAddress;
@@ -95,6 +107,98 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 	Boolean isHost = false;
 
 	public static void main(String[] args) {
+		RoutingDlg routingDlg;
+		routingDlg = new RoutingDlg("Routing");
+		
+		m_LayerMgr.AddLayer(routingDlg);
+
+		
+		ipLayer[0] = new IPLayer("Ip0");
+		m_LayerMgr.AddLayer(ipLayer[0]);
+		ipLayer[1] = new IPLayer("Ip1");
+		m_LayerMgr.AddLayer(ipLayer[1]);
+
+		arpLayer[0] = new ARPLayer("Arp0");
+		m_LayerMgr.AddLayer(arpLayer[0]);
+		arpLayer[1] = new ARPLayer("Arp1");
+		m_LayerMgr.AddLayer(arpLayer[1]);
+
+		ethernetLayer[0] = new EthernetLayer("Ethernet0");
+		m_LayerMgr.AddLayer(ethernetLayer[0]);
+		ethernetLayer[1] = new EthernetLayer("Ethernet1");
+		m_LayerMgr.AddLayer(ethernetLayer[1]);
+
+		niLayer[0] = new NILayer("NI0");
+		m_LayerMgr.AddLayer(niLayer[0]);
+		niLayer[1] = new NILayer("NI1");
+		m_LayerMgr.AddLayer(niLayer[1]);
+
+		m_LayerMgr.ConnectLayers(" NI0 ( *Ethernet0 ( *Ip0 ) ) ");
+		m_LayerMgr.GetLayer("Ip0").SetUnderLayer(m_LayerMgr.GetLayer("Arp0"));
+		m_LayerMgr.GetLayer("Ethernet0").SetUpperUnderLayer(m_LayerMgr.GetLayer("Arp0"));
+
+
+		m_LayerMgr.GetLayer("NI1").SetUpperUnderLayer(m_LayerMgr.GetLayer("Ethernet1"));
+		m_LayerMgr.GetLayer("Ethernet1").SetUpperUnderLayer(m_LayerMgr.GetLayer("Ip1"));
+		m_LayerMgr.GetLayer("Ip1").SetUnderLayer(m_LayerMgr.GetLayer("Arp1"));
+		m_LayerMgr.GetLayer("Ethernet1").SetUpperUnderLayer(m_LayerMgr.GetLayer("Arp1"));
+
+		// ip레이어에 이더넷레이어 설정
+//		ipLayer[0].setEthernetLayer(ethernetLayer[0]);
+//		ipLayer[1].setEthernetLayer(ethernetLayer[1]);
+		ipLayer[0].SetUpperLayer(ethernetLayer[0]);
+		ipLayer[1].SetUpperLayer(ethernetLayer[1]);
+
+		// arp layer의 upper layer 설정
+		arpLayer[0].SetUpperLayer(routingDlg);
+		arpLayer[1].SetUpperLayer(routingDlg);
+//		arpLayer[0].setRoutingDlg(routingDlg);
+//		arpLayer[1].setRoutingDlg(routingDlg);
+
+
+		ethernetLayer[0].SetUpperLayer(arpLayer[0]);
+		ethernetLayer[1].SetUpperLayer(arpLayer[0]);		
+//		ethernetLayer[0].setArpLayer(arpLayer[0]);
+//		ethernetLayer[1].setArpLayer(arpLayer[1]);
+
+//		ethernetLayer[0].setSrcAddr((niLayer[0].m_pAdapterList.get(1).getHardwareAddress()));
+//		ethernetLayer[1].setSrcAddr((niLayer[1].m_pAdapterList.get(2).getHardwareAddress()));
+//		ipLayer[0].setSrcIP(niLayer[0].m_pAdapterList.get(1).getAddresses().get(0).getAddr().getData());
+//		ipLayer[1].setSrcIP(niLayer[1].m_pAdapterList.get(2).getAddresses().get(0).getAddr().getData());
+//		arpLayer[0].setSrcIp(niLayer[0].m_pAdapterList.get(1).getAddresses().get(0).getAddr().getData());
+//		arpLayer[0].setSrcMac(niLayer[0].m_pAdapterList.get(1).getHardwareAddress());
+//		arpLayer[1].setSrcIp(niLayer[1].m_pAdapterList.get(2).getAddresses().get(0).getAddr().getData());
+//		arpLayer[1].setSrcMac(niLayer[1].m_pAdapterList.get(2).getHardwareAddress());
+
+		Scanner scanner = new Scanner(System.in);
+        System.out.println("Input Command \"set\" then Routing Start");
+
+        while(true) {
+            String command = scanner.next();
+            if(command.equals("set")) {
+				System.out.println("Adapter 0 : " +  niLayer[0].m_pAdapterList.get(0).getDescription());
+//				System.out.format("IP %s\n", ipByteToString(ipLayer[0].getSrcIP()));
+                niLayer[0].SetAdapterNumber(0);
+//                Thread.sleep(500);
+				System.out.println("Adapter 1 : " +  niLayer[1].m_pAdapterList.get(1).getDescription());
+//				System.out.format("IP %s\n", ipByteToString(ipLayer[1].getSrcIP()));
+                niLayer[1].SetAdapterNumber(1);
+                System.out.println("Setting Adapter Complete");
+            }
+            break;
+        }
+
+
+//		ipLayer[0].otherIPLayer = ipLayer[1];
+//		ipLayer[0].arpLayer = arpLayer[0];
+//		ipLayer[1].otherIPLayer = ipLayer[0];
+//        ipLayer[1].arpLayer = arpLayer[1];
+//
+//        arpLayer[0].SendGARP();
+//        arpLayer[1].SendGARP();
+		// 어떤 어댑터를 사용할지 결정한다.
+		// 디버깅을 통해 adapter list 를 이용하여 설정한다.
+		// 링크가 다 연결된 후 언더레이어 접근할수 있어서 이 때 접근해준다.
 		m_LayerMgr.AddLayer(new NILayer("NI"));
 		m_LayerMgr.AddLayer(new EthernetLayer("Ethernet"));
 		m_LayerMgr.AddLayer(new ARPLayer("ARP"));
@@ -163,18 +267,18 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 	public RoutingDlg(String pName) {
 		
 		//주소 초기화
-		((ARPLayer) m_LayerMgr.GetLayer("ARP")).SetSrcMac(getLocalMacAddress());
-		((EthernetLayer) m_LayerMgr.GetLayer("Ethernet")).SetEnetSrcAddress(getLocalMacAddress());;
-		
-		try {
-			((ARPLayer) m_LayerMgr.GetLayer("ARP")).SetSrcIp(InetToByte(InetAddress.getLocalHost()));
-		} catch (UnknownHostException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+//		((ARPLayer) m_LayerMgr.GetLayer("ARP")).SetSrcMac(getLocalMacAddress());
+//		((EthernetLayer) m_LayerMgr.GetLayer("Ethernet")).SetEnetSrcAddress(getLocalMacAddress());	
+//		
+//		try {
+//			((ARPLayer) m_LayerMgr.GetLayer("ARP")).SetSrcIp(InetToByte(InetAddress.getLocalHost()));
+//		} catch (UnknownHostException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
 		
 		pLayerName = pName;
-		setTitle("1조 컴퓨터네트워크 ARP 팀프로젝트");
+		setTitle("1조 컴퓨터네트워크  Static Router 팀프로젝트");
 
 		setBounds(250, 250, 1344, 585);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -194,6 +298,10 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		String contents_PARP_Entry[][] = {};
 
 		dtm_ARP = new DefaultTableModel(contents_ARP_Cache, header_ARP_Cache);
+		
+		NIC_combobox2 = new JComboBox();
+		NIC_combobox2.setBounds(311, 336, 66, 20);
+		pane.add(NIC_combobox2);
 		Table_ARP_Cache = new JTable(new DefaultTableModel(
 			new Object[][] {
 			},
@@ -311,7 +419,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 					}
 					System.arraycopy(dstAddress, 0, targetIPAddress, 0, 4);
 					
-					((NILayer) m_LayerMgr.GetLayer("NI")).SetAdapterNumber(selected_index);
+//					((NILayer) m_LayerMgr.GetLayer("NI")).SetAdapterNumber(selected_index1);
 
 					Setting_Button.setText("Reset");
 					dstMacAddress.setEditable(false);
@@ -339,61 +447,33 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		Setting_Button.setBounds(418, 243, 87, 20);
 		//pane.add(Setting_Button);// setting
 
-		Chat_send_Button = new JButton("Send");
-		Chat_send_Button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				if (Setting_Button.getText() == "Reset" ) {
-					String input = ChattingWrite.getText();
-					if (input.equals("")){
-						JOptionPane.showMessageDialog(null, "채팅을 입력하세요.");						
-					}
-					else{
-						ARPorChat = "chat";	// chat
-						ChattingArea.append("[SEND] : " + input + "\n");
-
-						byte[] type = new byte[2];
-						type[0] = 0x08;
-						type[1] = 0x20;
-						// ((EthernetLayer) m_LayerMgr.GetLayer("Ethernet")).SetEnetType(type);
-
-						byte[] bytes = input.getBytes();
-						m_LayerMgr.GetLayer("Chat").Send(bytes, bytes.length);
-						// p_UnderLayer.Send(bytes, bytes.length);
-						
-						ChattingWrite.setText("");						
-					}
-				} else {
-					JOptionPane.showMessageDialog(null, "주소 설정 오류");
-				}
-			}
-		});
-		Chat_send_Button.setBounds(383, 274, 161, 21);
-		//pane.add(Chat_send_Button);
-
-		NIC_select_Button = new JButton("Select");
+		NIC_select_Button = new JButton("Set NIC");
 		NIC_select_Button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				String selected = comboBox.getSelectedItem().toString();
-				selected_index = comboBox.getSelectedIndex();
-				srcMacAddress.setText("");
-				try {
-					byte[] MacAddress = ((NILayer) m_LayerMgr.GetLayer("NI")).GetAdapterObject(selected_index)
-							.getHardwareAddress();
-					String hexNumber;
-					for (int i = 0; i < 6; i++) {
-						hexNumber = Integer.toHexString(0xff & MacAddress[i]);
-						srcMacAddress.append(hexNumber.toUpperCase());
-						if (i != 5)
-							srcMacAddress.append("-");
-					}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				String selected1 = NIC_combobox1.getSelectedItem().toString();
+				String selected2 = NIC_combobox2.getSelectedItem().toString();
+				selected_index1 = NIC_combobox1.getSelectedIndex();
+				selected_index2 = NIC_combobox2.getSelectedIndex();
+//				srcMacAddress.setText("");
+				((NILayer) m_LayerMgr.GetLayer("NI0")).SetAdapterNumber(selected_index1);
+				((NILayer) m_LayerMgr.GetLayer("NI1")).SetAdapterNumber(selected_index2);
+				
+//				JTextField jtf = (JTextField) NIC_combobox1.getEditor().getEditorComponent();
+//				jtf.setEditable(false);
+				
+				/*
+				 * try { byte[] MacAddress = ((NILayer)
+				 * m_LayerMgr.GetLayer("NI")).GetAdapterObject(selected_index)
+				 * .getHardwareAddress(); String hexNumber; for (int i = 0; i < 6; i++) {
+				 * hexNumber = Integer.toHexString(0xff & MacAddress[i]);
+				 * srcMacAddress.append(hexNumber.toUpperCase()); if (i != 5)
+				 * srcMacAddress.append("-"); } } catch (IOException e) { // TODO Auto-generated
+				 * catch block e.printStackTrace(); }
+				 */
 			}
 		});
 
-		NIC_select_Button.setBounds(400, 459, 87, 23);
+		NIC_select_Button.setBounds(397, 336, 87, 23);
 		pane.add(NIC_select_Button);
 		
 
@@ -441,11 +521,12 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		File_send_Button.setBounds(322, 336, 161, 23);
 		pane.add(File_send_Button);*/
 
-		comboBox = new JComboBox();
-		comboBox.setBounds(220, 460, 161, 20);
+		NIC_combobox1 = new JComboBox();
+		NIC_combobox1.setBounds(220, 336, 66, 20);
 //		comboBox.setBounds(380, 63, 170, 24);
-		pane.add(comboBox);
-
+		pane.add(NIC_combobox1);
+		
+		
 		hwAddress = new JTextField();
 		hwAddress.setColumns(10);
 		hwAddress.setBounds(125, 446, 400, 24);
@@ -455,31 +536,31 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		lblhw.setBounds(43, 446, 80, 24);
 		//pane.add(lblhw);
 
-		HwAddress_send_Button = new JButton("HW Send");
-		HwAddress_send_Button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String pattern = "[0-9a-fA-F]{2}[-][0-9a-fA-F]{2}[-][0-9a-fA-F]{2}[-][0-9a-fA-F]{2}[-][0 -9a-fA-F]{2}[-][0-9a-fA-F]{2}";	// MAC address pattern
-				String inputMAC = hwAddress.getText();
-
-				if (Pattern.matches(pattern, inputMAC)) { // If inputed MAC is valid pattern, continue
-
-					byte[] bytes = new byte[6];
-
-					String[] macString = inputMAC.split("\\-"); // Split the string array by "\\-"
-					for (int i = 0; i < 6; i++) {
-						bytes[i] = (byte) Integer.parseInt(macString[i], 16); // Cast the integers to byte
-//					System.out.println(bytes[i]);	//	for debugging
-					}
-
-//					-2 : GARP
-					m_LayerMgr.GetLayer("TCP").Send(bytes, -2); // Explicitly send -2 instead of bytes.length
-
-				} else {
-					JOptionPane.showMessageDialog(null, "유효하지 않은 MAC 주소");
-				}
-			}
-		});
-		HwAddress_send_Button.setBounds(199, 486, 161, 21);
+//		HwAddress_send_Button = new JButton("HW Send");
+//		HwAddress_send_Button.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e) {
+//				String pattern = "[0-9a-fA-F]{2}[-][0-9a-fA-F]{2}[-][0-9a-fA-F]{2}[-][0-9a-fA-F]{2}[-][0 -9a-fA-F]{2}[-][0-9a-fA-F]{2}";	// MAC address pattern
+//				String inputMAC = hwAddress.getText();
+//
+//				if (Pattern.matches(pattern, inputMAC)) { // If inputed MAC is valid pattern, continue
+//
+//					byte[] bytes = new byte[6];
+//
+//					String[] macString = inputMAC.split("\\-"); // Split the string array by "\\-"
+//					for (int i = 0; i < 6; i++) {
+//						bytes[i] = (byte) Integer.parseInt(macString[i], 16); // Cast the integers to byte
+////					System.out.println(bytes[i]);	//	for debugging
+//					}
+//
+////					-2 : GARP
+//					m_LayerMgr.GetLayer("TCP").Send(bytes, -2); // Explicitly send -2 instead of bytes.length
+//
+//				} else {
+//					JOptionPane.showMessageDialog(null, "유효하지 않은 MAC 주소");
+//				}
+//			}
+//		});
+//		HwAddress_send_Button.setBounds(199, 486, 161, 21);
 		//pane.add(HwAddress_send_Button);
 
 		JPanel paneG = new JPanel();
@@ -656,15 +737,15 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		pane.add(btnNewButton_1);
 		
 		JTextArea textArea_Destination = new JTextArea();
-		textArea_Destination.setBounds(220, 332, 233, 27);
+		textArea_Destination.setBounds(220, 360, 233, 27);
 		pane.add(textArea_Destination);
 		
 		JTextArea textArea_Netmask = new JTextArea();
-		textArea_Netmask.setBounds(220, 365, 233, 27);
+		textArea_Netmask.setBounds(220, 393, 233, 27);
 		pane.add(textArea_Netmask);
 		
 		JTextArea textArea_Gateway = new JTextArea();
-		textArea_Gateway.setBounds(220, 399, 233, 27);
+		textArea_Gateway.setBounds(220, 427, 233, 27);
 		pane.add(textArea_Gateway);
 		
 
@@ -680,7 +761,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
                 }
 			}
         });
-		checkBox_Up.setBounds(220, 427, 49, 27);
+		checkBox_Up.setBounds(220, 455, 49, 27);
 		pane.add(checkBox_Up);
 		
 		JCheckBox checkBox_Gateway = new JCheckBox("Gateway");
@@ -695,7 +776,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
                 }
 			}
         });
-		checkBox_Gateway.setBounds(286, 427, 85, 27);
+		checkBox_Gateway.setBounds(286, 455, 85, 27);
 		pane.add(checkBox_Gateway);
 		
 		JCheckBox checkBox_Host = new JCheckBox("Host");
@@ -710,27 +791,27 @@ public class RoutingDlg extends JFrame implements BaseLayer {
                 }
 			}
         });
-		checkBox_Host.setBounds(387, 427, 66, 27);
+		checkBox_Host.setBounds(387, 455, 66, 27);
 		pane.add(checkBox_Host);
 		
 		JLabel lblNewLabel = new JLabel("Destination");
-		lblNewLabel.setBounds(121, 332, 85, 18);
+		lblNewLabel.setBounds(123, 363, 85, 18);
 		pane.add(lblNewLabel);
 		
 		JLabel lblNetmask = new JLabel("Netmask");
-		lblNetmask.setBounds(121, 367, 85, 18);
+		lblNetmask.setBounds(121, 395, 85, 18);
 		pane.add(lblNetmask);
 		
 		JLabel lblGateway = new JLabel("Gateway");
-		lblGateway.setBounds(121, 401, 85, 18);
+		lblGateway.setBounds(121, 429, 85, 18);
 		pane.add(lblGateway);
 		
 		JLabel lblFlag = new JLabel("Flag");
-		lblFlag.setBounds(121, 431, 85, 18);
+		lblFlag.setBounds(121, 459, 85, 18);
 		pane.add(lblFlag);
 		
 		JLabel lblInterface = new JLabel("Interface");
-		lblInterface.setBounds(121, 459, 85, 18);
+		lblInterface.setBounds(123, 337, 85, 18);
 		pane.add(lblInterface);
 		
 //		JComboBox comboBox_1 = new JComboBox();
@@ -755,7 +836,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 				if(isGateway) tmpCheckBox += "G";
 				if(isHost) tmpCheckBox += "H";
 				inputString[3] = tmpCheckBox;
-				inputString[4] = comboBox.getSelectedItem().toString();
+				inputString[4] = NIC_combobox1.getSelectedItem().toString();
 				inputString[5] = "1(hard coded)";
 				
 				dtm_Routing.addRow(inputString); // Add a row with values.
@@ -788,10 +869,13 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 			System.err.printf("Can't read list of devices, error is %s", errbuf.toString());
 			return;
 		}
-		for (int i = 0; i < m_pAdapterList.size(); i++)
-			this.comboBox.addItem(m_pAdapterList.get(i).getDescription());
+		for (int i = 0; i < m_pAdapterList.size(); i++) {
+			this.NIC_combobox1.addItem(m_pAdapterList.get(i).getDescription());
+			this.NIC_combobox2.addItem(m_pAdapterList.get(i).getDescription());
+			
+		}
 	}
-
+	
 	public boolean Receive(byte[] input) {
 		byte[] data = input;
 		String Text = new String(data);
