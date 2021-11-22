@@ -133,13 +133,13 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		niLayer[1] = new NILayer("NI1");
 		m_LayerMgr.AddLayer(niLayer[1]);
 
-		m_LayerMgr.ConnectLayers(" NI0 ( *Ethernet0 ( *Ip0 ) ) ");
+		m_LayerMgr.ConnectLayers(" NI0 ( *Ethernet0 ( +Ip0 ) ) ");
 		m_LayerMgr.GetLayer("Ip0").SetUnderLayer(m_LayerMgr.GetLayer("Arp0"));
 		m_LayerMgr.GetLayer("Ethernet0").SetUpperUnderLayer(m_LayerMgr.GetLayer("Arp0"));
 
 
 		m_LayerMgr.GetLayer("NI1").SetUpperUnderLayer(m_LayerMgr.GetLayer("Ethernet1"));
-		m_LayerMgr.GetLayer("Ethernet1").SetUpperUnderLayer(m_LayerMgr.GetLayer("Ip1"));
+		m_LayerMgr.GetLayer("Ethernet1").SetUpperLayer(m_LayerMgr.GetLayer("Ip1"));
 		m_LayerMgr.GetLayer("Ip1").SetUnderLayer(m_LayerMgr.GetLayer("Arp1"));
 		m_LayerMgr.GetLayer("Ethernet1").SetUpperUnderLayer(m_LayerMgr.GetLayer("Arp1"));
 
@@ -199,14 +199,14 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		// 어떤 어댑터를 사용할지 결정한다.
 		// 디버깅을 통해 adapter list 를 이용하여 설정한다.
 		// 링크가 다 연결된 후 언더레이어 접근할수 있어서 이 때 접근해준다.
-		m_LayerMgr.AddLayer(new NILayer("NI"));
-		m_LayerMgr.AddLayer(new EthernetLayer("Ethernet"));
-		m_LayerMgr.AddLayer(new ARPLayer("ARP"));
-		m_LayerMgr.AddLayer(new IPLayer("IP"));
-		m_LayerMgr.AddLayer(new TCPLayer("TCP"));
-		m_LayerMgr.AddLayer(new RoutingDlg("GUI"));
+		//m_LayerMgr.AddLayer(new NILayer("NI"));
+		//m_LayerMgr.AddLayer(new EthernetLayer("Ethernet"));
+		//m_LayerMgr.AddLayer(new ARPLayer("ARP"));
+		//m_LayerMgr.AddLayer(new IPLayer("IP"));
+		//m_LayerMgr.AddLayer(new TCPLayer("TCP"));
+		//m_LayerMgr.AddLayer(new RoutingDlg("GUI"));
 
-		m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( *IP ( *TCP ( *GUI ) -ARP ) *ARP ) )");
+		//m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( *IP ( *TCP ( *GUI ) -ARP ) *ARP ) )");
 	}
 	
 	//	For the purpose of table edit.

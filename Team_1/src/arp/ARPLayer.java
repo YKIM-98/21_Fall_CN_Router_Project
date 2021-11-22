@@ -228,6 +228,7 @@ public class ARPLayer implements BaseLayer {
 		return buf;
 	}
 	
+	/*
 	public boolean Send(byte[] input, int length) {
 		byte[] dstIp = new byte[] { input[16], input[17], input[18], input[19] };
 		byte[] srcIp = new byte[] { input[12], input[13], input[14], input[15] };
@@ -251,6 +252,19 @@ public class ARPLayer implements BaseLayer {
 		byte[] temp = ObjToByte_Send(m_sHeader, input, (byte) 0x01);
 		
 		return this.GetUnderLayer().Send(temp, length + 28);
+	}
+	*/
+	
+	
+	public boolean Send(byte[] input, int length, int interfaceNum) {
+		byte[] dstIp = new byte[] { input[16], input[17], input[18], input[19] };
+		byte[] srcIp = new byte[] { input[12], input[13], input[14], input[15] };
+		dlg = ((RoutingDlg) this.GetUnderLayer().GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0));
+		
+		SetSrcIp(dlg.niLayer[1].GetAdapterObject(interfaceNum).getAddresses());
+		SetDstIp();
+		
+		return false;
 	}
 
 	public void SetOpcode(byte[] opcode) {
