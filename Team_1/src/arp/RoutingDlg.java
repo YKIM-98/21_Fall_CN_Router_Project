@@ -74,9 +74,9 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 	JButton File_send_Button;
 	JButton HwAddress_send_Button;
 
-	JComboBox NIC_combobox1;
-	JComboBox NIC_combobox2;
-		
+	JComboBox NIC_Set_combobox1;
+	JComboBox NIC_Set_combobox2;
+	JComboBox NIC_combobox_add2Table;
 
 	FileDialog fd;
 	private JTextField ARPIpAddress;
@@ -299,9 +299,9 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 
 		dtm_ARP = new DefaultTableModel(contents_ARP_Cache, header_ARP_Cache);
 		
-		NIC_combobox2 = new JComboBox();
-		NIC_combobox2.setBounds(311, 336, 66, 20);
-		pane.add(NIC_combobox2);
+		NIC_Set_combobox2 = new JComboBox();
+		NIC_Set_combobox2.setBounds(25, 456, 66, 20);
+		pane.add(NIC_Set_combobox2);
 		Table_ARP_Cache = new JTable(new DefaultTableModel(
 			new Object[][] {
 			},
@@ -450,10 +450,10 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		NIC_select_Button = new JButton("Set NIC");
 		NIC_select_Button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				String selected1 = NIC_combobox1.getSelectedItem().toString();
-				String selected2 = NIC_combobox2.getSelectedItem().toString();
-				selected_index1 = NIC_combobox1.getSelectedIndex();
-				selected_index2 = NIC_combobox2.getSelectedIndex();
+				String selected1 = NIC_Set_combobox1.getSelectedItem().toString();
+				String selected2 = NIC_Set_combobox2.getSelectedItem().toString();
+				selected_index1 = NIC_Set_combobox1.getSelectedIndex();
+				selected_index2 = NIC_Set_combobox2.getSelectedIndex();
 //				srcMacAddress.setText("");
 				((NILayer) m_LayerMgr.GetLayer("NI0")).SetAdapterNumber(selected_index1);
 				((NILayer) m_LayerMgr.GetLayer("NI1")).SetAdapterNumber(selected_index2);
@@ -473,7 +473,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 			}
 		});
 
-		NIC_select_Button.setBounds(397, 336, 87, 23);
+		NIC_select_Button.setBounds(25, 486, 87, 23);
 		pane.add(NIC_select_Button);
 		
 
@@ -521,10 +521,10 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		File_send_Button.setBounds(322, 336, 161, 23);
 		pane.add(File_send_Button);*/
 
-		NIC_combobox1 = new JComboBox();
-		NIC_combobox1.setBounds(220, 336, 66, 20);
+		NIC_Set_combobox1 = new JComboBox();
+		NIC_Set_combobox1.setBounds(25, 409, 66, 20);
 //		comboBox.setBounds(380, 63, 170, 24);
-		pane.add(NIC_combobox1);
+		pane.add(NIC_Set_combobox1);
 		
 		
 		hwAddress = new JTextField();
@@ -836,7 +836,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 				if(isGateway) tmpCheckBox += "G";
 				if(isHost) tmpCheckBox += "H";
 				inputString[3] = tmpCheckBox;
-				inputString[4] = NIC_combobox1.getSelectedItem().toString();
+				inputString[4] = NIC_combobox_add2Table.getSelectedItem().toString();
 				inputString[5] = "1(hard coded)";
 				
 				dtm_Routing.addRow(inputString); // Add a row with values.
@@ -852,8 +852,20 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		btnNewButton_1_1.setBounds(190, 487, 105, 27);
 		pane.add(btnNewButton_1_1);
 		panel_3.setBorder(new TitledBorder(null, "Static Routing Table", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel_3.setBounds(12, 13, 550, 513);
+		panel_3.setBounds(12, 13, 550, 293);
 		pane.add(panel_3);
+		
+		JLabel lblInterface_2 = new JLabel("Interface1");
+		lblInterface_2.setBounds(27, 390, 85, 18);
+		pane.add(lblInterface_2);
+		
+		JLabel lblInterface_2_1 = new JLabel("Interface2");
+		lblInterface_2_1.setBounds(25, 439, 85, 18);
+		pane.add(lblInterface_2_1);
+		
+		NIC_combobox_add2Table = new JComboBox();
+		NIC_combobox_add2Table.setBounds(220, 335, 233, 20);
+		pane.add(NIC_combobox_add2Table);
 
 		setVisible(true);
 
@@ -870,9 +882,9 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 			return;
 		}
 		for (int i = 0; i < m_pAdapterList.size(); i++) {
-			this.NIC_combobox1.addItem(m_pAdapterList.get(i).getDescription());
-			this.NIC_combobox2.addItem(m_pAdapterList.get(i).getDescription());
-			
+			this.NIC_Set_combobox1.addItem(m_pAdapterList.get(i).getDescription());
+			this.NIC_Set_combobox2.addItem(m_pAdapterList.get(i).getDescription());
+			this.NIC_combobox_add2Table.addItem(m_pAdapterList.get(i).getDescription());
 		}
 	}
 	
