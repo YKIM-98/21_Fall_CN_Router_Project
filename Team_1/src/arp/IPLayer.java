@@ -94,6 +94,7 @@ public class IPLayer implements BaseLayer {
 
 	private byte[] ObjToByte20(_IP_Header ip_header, byte[] input, int length) { // 헤더 추가부분
 		byte[] buf = new byte[length + 20];
+
 		buf[0] = ip_header.ip_verlen;
 		buf[1] = ip_header.ip_tos;
 		buf[2] = (byte) (((length + 20) >> 8) & 0xFF);

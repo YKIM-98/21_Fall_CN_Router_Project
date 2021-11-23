@@ -39,9 +39,11 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 	
 
 	public int nUpperLayerCount = 0;
+	public int nUnderLayerCount = 0;	
 	public String pLayerName = null;
 	public BaseLayer p_UnderLayer = null;
 	public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
+	public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<BaseLayer>();
 
 	String path;
 	
@@ -135,80 +137,29 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		niLayer[1] = new NILayer("NI1");
 		m_LayerMgr.AddLayer(niLayer[1]);
 
-		m_LayerMgr.ConnectLayers(" NI0 ( *Ethernet0 ( +Ip0 ) ) ");
-		m_LayerMgr.GetLayer("Ip0").SetUnderLayer(m_LayerMgr.GetLayer("Arp0"));
-		m_LayerMgr.GetLayer("Ethernet0").SetUpperUnderLayer(m_LayerMgr.GetLayer("Arp0"));
 
+		//m_LayerMgr.ConnectLayers(" NI0 ( *Ethernet0 ( *Ip0 ( *Routing ) *Arp0 )");
+		m_LayerMgr.GetLayer("NI0").SetUpperLayer(m_LayerMgr.GetLayer("Ethernet0"));
+		m_LayerMgr.GetLayer("Ethernet0").SetUpperLayer(m_LayerMgr.GetLayer("Ip0"));
+		m_LayerMgr.GetLayer("Ethernet0").SetUpperLayer(m_LayerMgr.GetLayer("Arp0"));
+		m_LayerMgr.GetLayer("Ip0").SetUpperLayer(m_LayerMgr.GetLayer("Routing"));
+		
+		m_LayerMgr.GetLayer("Routing").SetUnderLayer((m_LayerMgr.GetLayer("Ip0")));
+		m_LayerMgr.GetLayer("Ip0").SetUnderLayer((m_LayerMgr.GetLayer("Arp0")));
+		m_LayerMgr.GetLayer("Arp0").SetUnderLayer((m_LayerMgr.GetLayer("Ethernet0")));
+		m_LayerMgr.GetLayer("Ethernet0").SetUnderLayer((m_LayerMgr.GetLayer("NI0")));
 
-		m_LayerMgr.GetLayer("NI1").SetUpperUnderLayer(m_LayerMgr.GetLayer("Ethernet1"));
+		m_LayerMgr.GetLayer("NI1").SetUpperLayer(m_LayerMgr.GetLayer("Ethernet1"));
 		m_LayerMgr.GetLayer("Ethernet1").SetUpperLayer(m_LayerMgr.GetLayer("Ip1"));
-		m_LayerMgr.GetLayer("Ip1").SetUnderLayer(m_LayerMgr.GetLayer("Arp1"));
-		m_LayerMgr.GetLayer("Ethernet1").SetUpperUnderLayer(m_LayerMgr.GetLayer("Arp1"));
+		m_LayerMgr.GetLayer("Ethernet1").SetUpperLayer(m_LayerMgr.GetLayer("Arp1"));
+		m_LayerMgr.GetLayer("Ip1").SetUpperLayer(m_LayerMgr.GetLayer("Routing"));
+		
+		m_LayerMgr.GetLayer("Routing").SetUnderLayer((m_LayerMgr.GetLayer("Ip1")));
+		m_LayerMgr.GetLayer("Ip1").SetUnderLayer((m_LayerMgr.GetLayer("Arp1")));
+		m_LayerMgr.GetLayer("Arp1").SetUnderLayer((m_LayerMgr.GetLayer("Ethernet1")));
+		m_LayerMgr.GetLayer("Ethernet1").SetUnderLayer((m_LayerMgr.GetLayer("NI1")));
+		
 
-		// ip레이어에 이더넷레이어 설정
-//		ipLayer[0].setEthernetLayer(ethernetLayer[0]);
-//		ipLayer[1].setEthernetLayer(ethernetLayer[1]);
-		ipLayer[0].SetUpperLayer(ethernetLayer[0]);
-		ipLayer[1].SetUpperLayer(ethernetLayer[1]);
-
-		// arp layer의 upper layer 설정
-		arpLayer[0].SetUpperLayer(routingDlg);
-		arpLayer[1].SetUpperLayer(routingDlg);
-//		arpLayer[0].setRoutingDlg(routingDlg);
-//		arpLayer[1].setRoutingDlg(routingDlg);
-
-
-		ethernetLayer[0].SetUpperLayer(arpLayer[0]);
-		ethernetLayer[1].SetUpperLayer(arpLayer[0]);		
-//		ethernetLayer[0].setArpLayer(arpLayer[0]);
-//		ethernetLayer[1].setArpLayer(arpLayer[1]);
-
-//		ethernetLayer[0].setSrcAddr((niLayer[0].m_pAdapterList.get(1).getHardwareAddress()));
-//		ethernetLayer[1].setSrcAddr((niLayer[1].m_pAdapterList.get(2).getHardwareAddress()));
-//		ipLayer[0].setSrcIP(niLayer[0].m_pAdapterList.get(1).getAddresses().get(0).getAddr().getData());
-//		ipLayer[1].setSrcIP(niLayer[1].m_pAdapterList.get(2).getAddresses().get(0).getAddr().getData());
-//		arpLayer[0].setSrcIp(niLayer[0].m_pAdapterList.get(1).getAddresses().get(0).getAddr().getData());
-//		arpLayer[0].setSrcMac(niLayer[0].m_pAdapterList.get(1).getHardwareAddress());
-//		arpLayer[1].setSrcIp(niLayer[1].m_pAdapterList.get(2).getAddresses().get(0).getAddr().getData());
-//		arpLayer[1].setSrcMac(niLayer[1].m_pAdapterList.get(2).getHardwareAddress());
-
-		Scanner scanner = new Scanner(System.in);
-        System.out.println("Input Command \"set\" then Routing Start");
-
-        while(true) {
-            String command = scanner.next();
-            if(command.equals("set")) {
-				System.out.println("Adapter 0 : " +  niLayer[0].m_pAdapterList.get(0).getDescription());
-//				System.out.format("IP %s\n", ipByteToString(ipLayer[0].getSrcIP()));
-                niLayer[0].SetAdapterNumber(0);
-//                Thread.sleep(500);
-				System.out.println("Adapter 1 : " +  niLayer[1].m_pAdapterList.get(1).getDescription());
-//				System.out.format("IP %s\n", ipByteToString(ipLayer[1].getSrcIP()));
-                niLayer[1].SetAdapterNumber(1);
-                System.out.println("Setting Adapter Complete");
-            }
-            break;
-        }
-
-
-//		ipLayer[0].otherIPLayer = ipLayer[1];
-//		ipLayer[0].arpLayer = arpLayer[0];
-//		ipLayer[1].otherIPLayer = ipLayer[0];
-//        ipLayer[1].arpLayer = arpLayer[1];
-//
-//        arpLayer[0].SendGARP();
-//        arpLayer[1].SendGARP();
-		// 어떤 어댑터를 사용할지 결정한다.
-		// 디버깅을 통해 adapter list 를 이용하여 설정한다.
-		// 링크가 다 연결된 후 언더레이어 접근할수 있어서 이 때 접근해준다.
-		//m_LayerMgr.AddLayer(new NILayer("NI"));
-		//m_LayerMgr.AddLayer(new EthernetLayer("Ethernet"));
-		//m_LayerMgr.AddLayer(new ARPLayer("ARP"));
-		//m_LayerMgr.AddLayer(new IPLayer("IP"));
-		//m_LayerMgr.AddLayer(new TCPLayer("TCP"));
-		//m_LayerMgr.AddLayer(new RoutingDlg("GUI"));
-
-		//m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( *IP ( *TCP ( *GUI ) -ARP ) *ARP ) )");
 	}
 	
 	//	For the purpose of table edit.
@@ -909,7 +860,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		// TODO Auto-generated method stub
 		if (pUnderLayer == null)
 			return;
-		this.p_UnderLayer = pUnderLayer;
+		this.p_aUnderLayer.add(nUnderLayerCount++, pUnderLayer);
 	}
 
 	@Override
@@ -934,6 +885,14 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 			return null;
 		return p_UnderLayer;
 	}
+
+	public BaseLayer GetUnderLayer(int nindex) {
+		// TODO Auto-generated method stub
+		if (nindex < 0 || nindex > nUnderLayerCount || nUnderLayerCount < 0)
+			return null;
+		return p_aUnderLayer.get(nindex);
+	}
+
 
 	@Override
 	public BaseLayer GetUpperLayer(int nindex) {
