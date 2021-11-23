@@ -22,7 +22,7 @@ interface BaseLayer {
 	}
 
 	public void SetUpperUnderLayer(BaseLayer pUULayer);
-
+	
 	public default boolean Send(byte[] input, int length) {
 		return false;
 	}

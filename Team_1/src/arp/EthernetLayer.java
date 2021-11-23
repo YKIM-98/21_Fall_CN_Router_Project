@@ -76,10 +76,9 @@ public class EthernetLayer implements BaseLayer {
 			SetEnetSrcAddress(new byte[] { input[8], input[9], input[10], input[11], input[12], input[13] });
 			SetEnetType(new byte[] { 0x08, 0x06 });
 		}
-		else { //data
-			SetEnetDstAddress(new byte[] { (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff});
-			byte[] myMacAddr = dlg.myMacByte;
-			SetEnetSrcAddress(new byte[] { myMacAddr[0], myMacAddr[1], myMacAddr[2], myMacAddr[3], myMacAddr[4], myMacAddr[5] });
+		else if (opCode == 3){//routing
+			SetEnetDstAddress(new byte[] { input[18], input[19], input[20], input[21], input[22], input[23] });
+			SetEnetSrcAddress(new byte[] { input[8], input[9], input[10], input[11], input[12], input[13] });
 			SetEnetType(new byte[] { 0x08, 0x00 });			
 		}
 		m_sHeader.enet_srcaddr.addr = dlg.myMacByte;

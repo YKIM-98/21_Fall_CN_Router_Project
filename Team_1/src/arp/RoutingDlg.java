@@ -36,6 +36,8 @@ import javax.swing.border.MatteBorder;
 
 
 public class RoutingDlg extends JFrame implements BaseLayer {
+	
+
 	public int nUpperLayerCount = 0;
 	public int nUnderLayerCount = 0;	
 	public String pLayerName = null;
@@ -135,7 +137,8 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		niLayer[1] = new NILayer("NI1");
 		m_LayerMgr.AddLayer(niLayer[1]);
 
-//		m_LayerMgr.ConnectLayers(" NI0 ( *Ethernet0 ( *Ip0 ( *Routing ) *Arp0 )");
+
+		//m_LayerMgr.ConnectLayers(" NI0 ( *Ethernet0 ( *Ip0 ( *Routing ) *Arp0 )");
 		m_LayerMgr.GetLayer("NI0").SetUpperLayer(m_LayerMgr.GetLayer("Ethernet0"));
 		m_LayerMgr.GetLayer("Ethernet0").SetUpperLayer(m_LayerMgr.GetLayer("Ip0"));
 		m_LayerMgr.GetLayer("Ethernet0").SetUpperLayer(m_LayerMgr.GetLayer("Arp0"));
@@ -156,6 +159,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		m_LayerMgr.GetLayer("Arp1").SetUnderLayer((m_LayerMgr.GetLayer("Ethernet1")));
 		m_LayerMgr.GetLayer("Ethernet1").SetUnderLayer((m_LayerMgr.GetLayer("NI1")));
 		
+
 	}
 	
 	//	For the purpose of table edit.
@@ -402,8 +406,8 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 				selected_index1 = NIC_Set_combobox1.getSelectedIndex();
 				selected_index2 = NIC_Set_combobox2.getSelectedIndex();
 //				srcMacAddress.setText("");
-				((NILayer) m_LayerMgr.GetLayer("NI0")).SetAdapterNumber(selected_index1);
-				((NILayer) m_LayerMgr.GetLayer("NI1")).SetAdapterNumber(selected_index2);
+				((NILayer) m_LayerMgr.GetLayer("NI0")).SetAdapterNumber(selected_index1);				
+				((NILayer) m_LayerMgr.GetLayer("NI1")).SetAdapterNumber(selected_index2);			
 				
 //				JTextField jtf = (JTextField) NIC_combobox1.getEditor().getEditorComponent();
 //				jtf.setEditable(false);
@@ -783,7 +787,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 				if(isGateway) tmpCheckBox += "G";
 				if(isHost) tmpCheckBox += "H";
 				inputString[3] = tmpCheckBox;
-				inputString[4] = NIC_combobox_add2Table.getSelectedItem().toString();
+				inputString[4] = Integer.toString(NIC_combobox_add2Table.getSelectedIndex());
 				inputString[5] = "1(hard coded)";
 				
 				dtm_Routing.addRow(inputString); // Add a row with values.
@@ -840,6 +844,15 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		String Text = new String(data);
 		ChattingArea.append("[RECV] : " + Text + "\n");
 		return false;
+	}
+	
+	public int findInterface(int interfaceNum) {
+		if(selected_index1 == interfaceNum) {
+			return 0;
+		}
+		else {
+			return 1;
+		}
 	}
 
 	@Override
@@ -919,5 +932,9 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 	
 	public String getInputARPIP(){
 		return inputARPIP;
+	}
+	
+	public JTable getTable_Routing_Cache() {
+		return Table_Routing_Cache;
 	}
 }
