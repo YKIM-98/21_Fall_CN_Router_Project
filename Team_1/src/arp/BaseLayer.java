@@ -26,6 +26,10 @@ interface BaseLayer {
 	public default boolean Send(byte[] input, int length) {
 		return false;
 	}
+	
+	public default boolean SendForRouting(byte[] input, int length) {
+		return false;
+	}
 
 	public default boolean Send(String filename) {
 		return false;

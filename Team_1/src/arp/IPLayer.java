@@ -68,8 +68,9 @@ public class IPLayer implements BaseLayer {
 		
 		if (isRouting) {// Routing
 			this.GetUnderLayer(0).Send(input, length);
-
 			isRouting = false;
+			byte[] temp = ObjToByte20(this.ip_header, input, resultLength);
+			return this.GetUnderLayer().SendForRouting(temp, resultLength + 20);
 			
 		} else if (dlg.ARPorChat.equals("ARP")) {
 			this.ip_header.ip_dstaddr.addr = new byte[4];
@@ -85,11 +86,10 @@ public class IPLayer implements BaseLayer {
 			}
 
 			SetIpDstAddress(dstAddressToByte);
+			byte[] temp = ObjToByte20(this.ip_header, input, resultLength);
+			return this.GetUnderLayer().Send(temp, resultLength + 20);
 		}
-
-		byte[] temp = ObjToByte20(this.ip_header, input, resultLength);
-
-		return this.GetUnderLayer(1).Send(temp, resultLength + 20);
+		return false;
 	}
 
 	private byte[] ObjToByte20(_IP_Header ip_header, byte[] input, int length) { // 헤더 추가부분

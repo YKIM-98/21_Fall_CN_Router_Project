@@ -2,6 +2,8 @@ package arp;
 
 import java.util.*;
 
+import javax.swing.table.DefaultTableModel;
+
 public class ARPLayer implements BaseLayer {
 	public int nUpperLayerCount = 0;
 	public BaseLayer p_UnderLayer = null;
@@ -230,42 +232,6 @@ public class ARPLayer implements BaseLayer {
 		return buf;
 	}
 
-	/*
-	 * public boolean Send(byte[] input, int length) { byte[] dstIp = new byte[] {
-	 * input[16], input[17], input[18], input[19] }; byte[] srcIp = new byte[] {
-	 * input[12], input[13], input[14], input[15] };
-	 * 
-	 * if (Arrays.equals(srcIp, dstIp)) {//GARP // srcMac = dlg.srcMac(바뀐 맥 주소) dlg
-	 * = ((RoutingDlg)
-	 * this.GetUnderLayer().GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0).
-	 * GetUpperLayer(0)); byte[] bytes = new byte[6];
-	 * 
-	 * String[] macString = dlg.hwAddress.getText().split("\\-"); // Split the
-	 * string array by "\\-" for (int i = 0; i < 6; i++) { bytes[i] = (byte)
-	 * Integer.parseInt(macString[i], 16); // Cast the integers to byte
-	 * m_sHeader.arp_srcMAC = bytes; } SetDstIp(dstIp);
-	 * 
-	 * } else {//ARP,PARP SetDstIp(dstIp); }
-	 * 
-	 * byte[] temp = ObjToByte_Send(m_sHeader, input, (byte) 0x01);
-	 * 
-	 * return this.GetUnderLayer().Send(temp, length + 28); }
-	 */
-
-	//패킷으로 interface 의 주소를 가져오는 형태
-	/*
-	public boolean Send(byte[] input, int length, int interfaceNum) {
-		byte[] dstIp = new byte[] { input[16], input[17], input[18], input[19] };
-
-		SetSrcIp(ip2Byte(((NILayer) this.GetUnderLayer()).getMyIpAddr()));
-		SetDstIp(dstIp);
-
-		byte[] temp = ObjToByte_Send(m_sHeader, input, (byte) 0x01);
-
-		return this.GetUnderLayer().Send(temp, length + 28);
-	}
-	*/
-	
 	public boolean Send(byte[] input, int length) {
 		byte[] bytes = null;
 		byte[] origin_dst_ip = new byte[] { input[16], input[17], input[18], input[19] };
@@ -281,6 +247,43 @@ public class ARPLayer implements BaseLayer {
 		  m_sHeader.arp_srcMAC = bytes;
 		  } 
 		//SetDstMac(dstMac);
+
+		byte[] temp = ObjToByte_Send(m_sHeader, input, (byte) 0x03);//opcode?
+
+		return this.GetUnderLayer().Send(temp, length + 28);
+	}
+	 
+	//패킷으로 interface 의 주소를 가져오는 형태
+	/*
+	public boolean Send(byte[] input, int length, int interfaceNum) {
+		byte[] dstIp = new byte[] { input[16], input[17], input[18], input[19] };
+
+		SetSrcIp(ip2Byte(((NILayer) this.GetUnderLayer()).getMyIpAddr()));
+		SetDstIp(dstIp);
+
+		byte[] temp = ObjToByte_Send(m_sHeader, input, (byte) 0x01);
+
+		return this.GetUnderLayer().Send(temp, length + 28);
+	}
+	*/
+	
+	public boolean SendForRouting(byte[] input, int length) {
+		byte[] bytes = null;
+		byte[] origin_dst_ip = new byte[] { input[16], input[17], input[18], input[19] };
+
+		SetSrcIp(ip2Byte(((NILayer) this.GetUnderLayer().GetUnderLayer()).getMyIpAddr()));
+		SetDstIp(origin_dst_ip);
+		SetSrcMac(((NILayer) this.GetUnderLayer().GetUnderLayer()).getMyMacAddr());
+		
+		DefaultTableModel dtm_arp = ((RoutingDlg) this.GetUpperLayer(0).GetUpperLayer(0)).dtm_ARP;
+		
+		for(int i=0; i < dtm_arp.getRowCount(); ++i) {
+			String ip_addr = (String) dtm_arp.getValueAt(i, 0);
+			if(ip_addr == ip2String(origin_dst_ip)) {
+				SetDstMac(ip2Byte((String) dtm_arp.getValueAt(i, 1)));
+				break;
+			} 
+		}
 
 		byte[] temp = ObjToByte_Send(m_sHeader, input, (byte) 0x03);//opcode?
 
