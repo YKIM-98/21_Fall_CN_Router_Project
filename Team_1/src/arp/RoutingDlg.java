@@ -1,6 +1,7 @@
 package arp;
 
 import java.awt.Container;
+import java.awt.Dialog;
 import java.awt.FileDialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -216,7 +217,6 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 	}
 	
 	public RoutingDlg(String pName) {
-		
 		//주소 초기화
 //		((ARPLayer) m_LayerMgr.GetLayer("ARP")).SetSrcMac(getLocalMacAddress());
 //		((EthernetLayer) m_LayerMgr.GetLayer("Ethernet")).SetEnetSrcAddress(getLocalMacAddress());	
@@ -406,21 +406,49 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 				selected_index1 = NIC_Set_combobox1.getSelectedIndex();
 				selected_index2 = NIC_Set_combobox2.getSelectedIndex();
 //				srcMacAddress.setText("");
-				((NILayer) m_LayerMgr.GetLayer("NI0")).SetAdapterNumber(selected_index1);				
-				((NILayer) m_LayerMgr.GetLayer("NI1")).SetAdapterNumber(selected_index2);			
+
+				((NILayer) m_LayerMgr.GetLayer("NI0")).SetAdapterNumber(selected_index1);
+				((NILayer) m_LayerMgr.GetLayer("NI1")).SetAdapterNumber(selected_index2);
+
+//				((IPLayer) m_LayerMgr.GetLayer("Ip0")).Send(new byte[28], -1);
+//				((IPLayer) m_LayerMgr.GetLayer("Ip1")).Send(new byte[28], -1);
 				
-//				JTextField jtf = (JTextField) NIC_combobox1.getEditor().getEditorComponent();
-//				jtf.setEditable(false);
+				// interface0 byte형  ip 생성
+//				String[] tmpIP1 = ((NILayer) m_LayerMgr.GetLayer("NI0")).m_pAdapterList.get(selected_index1).getAddresses().get(0).getAddr().toString().split("\\.");
+//				String ipString1 = tmpIP1[0].substring(7, tmpIP1[0].length()) + "." + tmpIP1[1] + "." + tmpIP1[2] + "."
+//						+ tmpIP1[3].substring(0, tmpIP1[3].length() - 1);
+//				byte[] Interface0IP = RoutingDlg.ip2Byte(ipString1);
+//				System.out.println("interface IP 0: "+ ipString1);
+
 				
-				/*
-				 * try { byte[] MacAddress = ((NILayer)
-				 * m_LayerMgr.GetLayer("NI")).GetAdapterObject(selected_index)
-				 * .getHardwareAddress(); String hexNumber; for (int i = 0; i < 6; i++) {
-				 * hexNumber = Integer.toHexString(0xff & MacAddress[i]);
-				 * srcMacAddress.append(hexNumber.toUpperCase()); if (i != 5)
-				 * srcMacAddress.append("-"); } } catch (IOException e) { // TODO Auto-generated
-				 * catch block e.printStackTrace(); }
-				 */
+				// interface1 byte형  ip 생성
+//				String[] tmpIP2 = ((NILayer) m_LayerMgr.GetLayer("NI0")).m_pAdapterList.get(selected_index2).getAddresses().get(0).getAddr().toString().split("\\.");
+//				String ipString2 = tmpIP2[0].substring(7, tmpIP2[0].length()) + "." + tmpIP2[1] + "." + tmpIP2[2] + "."
+//						+ tmpIP2[3].substring(0, tmpIP2[3].length() - 1);
+//				byte[] Interface1IP = RoutingDlg.ip2Byte(ipString2);
+//				System.out.println("interface IP 1: "+ ipString2);
+				
+				// NIC MacAddress 계산
+//				try {
+//					byte[] interface0MacByte = ((NILayer) m_LayerMgr.GetLayer("NI0")).m_pAdapterList.get(selected_index1).getHardwareAddress();
+//					String interface0Mac = RoutingDlg.macToString(interface0MacByte);	// NIC 0
+//					System.out.println("interface0 Mac: "+ interface0Mac);
+//					byte[] interface1MacByte = ((NILayer) m_LayerMgr.GetLayer("NI1")).m_pAdapterList.get(selected_index2).getHardwareAddress();
+//					String interface1Mac = RoutingDlg.macToString(interface1MacByte);	// NIC 1
+//					System.out.println("interface1 Mac: "+ interface1Mac);
+//					
+//					int Interface0IPLength = Interface0IP.length;	// 4
+//					byte[] TCPinput0 = new byte[Interface0IPLength + 24];	// TCP header 24 + data 4
+//					byte[] IPinput0 = new byte[TCPinput0.length+20];		// IP header 20 + data 28
+//					System.arraycopy(Interface0IP, 0, IPinput0, 40, 4);
+//					System.arraycopy(, 0, IPinput0, 44, 4);
+					
+//					((NILayer) m_LayerMgr.GetLayer("ARP1")).Send(new byte[Interface0IP], Interface0IP.length);
+					
+//				} catch (IOException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
 			}
 		});
 
@@ -664,7 +692,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		//@@@@@@@@@@@@@
 		
 		String header_Routing_Cache[] = {"Destination", "Netmask", "Gateway", "Flag", "Interface", "Metric"};
-		String contents_Routing_Cache[][] = {{"111.222.333.44","255.255.255.1","255.255.255.1","g","port1","10"}};
+		String contents_Routing_Cache[][] = {{"192.168.2.0","255.255.255.0","*","U","1","10"}};
 		
 		dtm_Routing = new DefaultTableModel(contents_Routing_Cache, header_Routing_Cache);
 		Table_Routing_Cache = new JTable(dtm_Routing);
@@ -933,8 +961,37 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 	public String getInputARPIP(){
 		return inputARPIP;
 	}
+
+	// port Number를 받아 해당 Network Card의 Mac Address를 가져오는 함수
+//    public static String getMacAddress(int portNum, BaseLayer layer) {
+//        byte[] macAddress = null;
+//        try {
+//            macAddress = m_pAdapterList.get(portNum).getHardwareAddress();
+//        } catch (IOException e) { e.printStackTrace(); }
+//        String macString = Translator.macToString(macAddress);
+//        return macString;
+//    }
+	// byte 배열로 된 mac 주소를 String으로 변환하는 함수
+	public static String macToString(byte[] mac) {
+		String macString = "";
+		for (byte b : mac) {
+			macString += String.format("%02X:", b);
+		}
+		return macString.substring(0, macString.length() - 1);
+	}
+	// String ip를  byte로 변환하는 함수
+    public static byte[] ip2Byte(String ip) {
+        String[] ipBuf = ip.split("\\.");
+        byte[] buf = new byte[4];
+        for(int i = 0; i < 4; i++) {
+           buf[i] = (byte) Integer.parseInt(ipBuf[i]);
+        }
+        return buf;
+     }
 	
 	public JTable getTable_Routing_Cache() {
 		return Table_Routing_Cache;
 	}
+
 }
+

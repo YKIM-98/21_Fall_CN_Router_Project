@@ -62,7 +62,7 @@ public class EthernetLayer implements BaseLayer {
 
 	public boolean Send(byte[] input, int length) {
 		int opCode = byte2ToInt(input[6], input[7]);
-		RoutingDlg dlg = ((RoutingDlg) this.GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0));
+		RoutingDlg dlg = ((RoutingDlg) this.GetUpperLayer(0).GetUpperLayer(0));
 		
 				
 		if (opCode == 1) {// ARP request

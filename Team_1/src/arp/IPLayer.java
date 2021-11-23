@@ -133,39 +133,79 @@ public class IPLayer implements BaseLayer {
 	}
 
 	public synchronized boolean Receive(byte[] input) {
-		if (((input[6] == 0) && (input[7] == 0))) {
-			byte[] temp = new byte[input.length - 28];
-			System.arraycopy(input, 28, temp, 0, input.length - 28);
-			return this.GetUpperLayer(0).Receive(removeIpHeader(temp));
-		}
-		// IP 타입 체크 ip_verlen : ip version : IPv4 ip_header.ip_tos : type of service
-		// 0x00
-		if (this.ip_header.ip_verlen != input[0] || this.ip_header.ip_tos != input[1]) {
+
+		byte[] srcIp = new byte[4];
+		byte[] dstIp = new byte[4];
+		System.arraycopy(input, 12, srcIp, 0, 4);
+		System.arraycopy(input, 16, dstIp, 0, 4);
+		String srcIpStr = ip2String(srcIp);		// 192.168.1.2
+		String dstIpStr = ip2String(dstIp);		// 192.168.2.2
+
+		// ignore noise
+		if(dstIpStr.equals("239.255.255.250"))
 			return false;
-		}
-
-		int packet_tot_len = ((input[2] << 8) & 0xFF00) + input[3] & 0xFF;
-		byte[] my_ip_address = ((RoutingDlg) this.GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0)).getMyIPAddress()
-				.getAddress();
-		for (int addr_index_count = 0; addr_index_count < 4; addr_index_count++) {
-			if (my_ip_address[addr_index_count] != input[16 + addr_index_count]) {
-				return this.GetUnderLayer(0).Send(input, packet_tot_len);
+		
+//		String dstSubnet = this.subnetting(dstIpStr, "255.255.255.0");
+		dlg = ((RoutingDlg) this.GetUpperLayer(0));
+		for (int i = 0; i< dlg.dtm_Routing.getRowCount(); i++){
+			String subnetMask = (String) dlg.dtm_Routing.getValueAt(i, 1);
+			String masked = this.subnetting(dstIpStr, subnetMask);
+			if (masked.equals((String) dlg.dtm_Routing.getValueAt(i, 0))){
+				String flag =(String) dlg.dtm_Routing.getValueAt(i, 3);
+				if (flag.equals("U")){	// dst host의 Mac address가 없는경우
+					Object portNum = dlg.dtm_Routing.getValueAt(i, 4);	// dst ip의  port num 찾기
+					int a = Integer.valueOf((String) portNum );  // test
+					String[] tmpIP1 = ((NILayer) this.GetUnderLayer(0).GetUnderLayer().GetUnderLayer()).m_pAdapterList.get(a).getAddresses().get(0).getAddr().toString().split("\\.");
+					String ipString1 = tmpIP1[0].substring(7, tmpIP1[0].length()) + "." + tmpIP1[1] + "." + tmpIP1[2] + "."
+							+ tmpIP1[3].substring(0, tmpIP1[3].length() - 1);
+					byte[] Interface0IP = RoutingDlg.ip2Byte(ipString1);					
+					byte[] temp = input;
+					System.arraycopy(Interface0IP, 0, temp, 12, Interface0IP.length);
+					
+					p_aUnderLayer.get(0).Send(temp, -1);	// arp 과정을 통해  mac address 알아오기
+//					for (int k = 0; k<dlg.dtm_ARP.getRowCount(); k++){
+//						
+//					}
+					
+				} else{	// UG
+					
+				}
 			}
-		} // PARP
-
-		if (input[9] == 0x06) {// IP Protocol이 0x06 TCP Layer 인지 판별
-			return this.GetUpperLayer(0).Receive(removeIpHeader(input));
 		}
-
-		return false;
+		
+		
+//		if (((input[6] == 0) && (input[7]==0))){
+//	        byte[] temp = new byte[input.length - 28];
+//	        System.arraycopy(input, 28, temp, 0, input.length - 28);	     
+//            return this.GetUpperLayer(0).Receive(removeIpHeader(temp));
+//		}
+//		// IP 타입 체크 ip_verlen : ip version : IPv4      ip_header.ip_tos : type of service 0x00
+//        if (this.ip_header.ip_verlen != input[0] || this.ip_header.ip_tos != input[1]) {
+//            return false;
+//        }
+//        
+//        int packet_tot_len = ((input[2] << 8) & 0xFF00) + input[3] & 0xFF;
+//        byte [] my_ip_address = ((RoutingDlg) this.GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0)).getMyIPAddress().getAddress();
+//        for (int addr_index_count = 0; addr_index_count < 4; addr_index_count++) {
+//            if (my_ip_address[addr_index_count] != input[16 + addr_index_count]) {
+//                return this.GetUnderLayer(0).Send(input, packet_tot_len);
+//            }
+//        }	// PARP
+//        
+//        if (input[9] == 0x06) {//IP Protocol이  0x06 TCP Layer 인지 판별
+//            return this.GetUpperLayer(0).Receive(removeIpHeader(input));
+//        }
+//        
+        return false;	
 	}
 
-	private byte[] removeIpHeader(byte[] input) {
+    private byte[] removeIpHeader(byte[] input) {
 
-		byte[] temp = new byte[input.length - 20];
-		System.arraycopy(input, 20, temp, 0, temp.length);
-		return temp;
-	}
+        byte[] temp = new byte[input.length - 20];
+        System.arraycopy(input, 20, temp, 0, temp.length);
+        return temp;
+    }
+	
 
 	@Override
 	public String GetLayerName() {
@@ -206,43 +246,41 @@ public class IPLayer implements BaseLayer {
 
 	@Override
 	public void SetUpperUnderLayer(BaseLayer pUULayer) {
-		this.SetUpperLayer(pUULayer);
-		pUULayer.SetUnderLayer(this);
-	}
 
-	public void SetIpSrcAddress(byte[] srcAddress) {
-		ip_header.ip_srcaddr.addr = srcAddress;
+        this.SetUpperLayer(pUULayer);
+        pUULayer.SetUnderLayer(this);		
 	}
+	
+    public void SetIpSrcAddress(byte[] srcAddress) {
+        ip_header.ip_srcaddr.addr = srcAddress;
+    }
 
-	public void SetIpDstAddress(byte[] dstAddress) {
-		ip_header.ip_dstaddr.addr = dstAddress;
+    public void SetIpDstAddress(byte[] dstAddress) {
+        ip_header.ip_dstaddr.addr = dstAddress;
 
-	}
-
-	public static String subnetting(String input, String mask) {
-		byte[] inputByte = ip2Byte(input);
-		byte[] maskByte = ip2Byte(mask);
-		byte[] masking = new byte[4];
-		for (int idx = 0; idx < 4; idx++) {
-			masking[idx] = (byte) (inputByte[idx] & maskByte[idx]);
-		}
-		return ip2String(masking);
-	}
-
-	public static byte[] ip2Byte(String ip) {
-		String[] ipBuf = ip.split("\\.");
-		byte[] buf = new byte[4];
-		for (int i = 0; i < 4; i++) {
-			buf[i] = (byte) Integer.parseInt(ipBuf[i]);
-		}
-		return buf;
-	}
-
-	public static String ip2String(byte[] ip) {
-		String ipAddress = "";
-		for (byte b : ip) {
-			ipAddress += Integer.toString(b & 0xFF) + ".";
-		}
-		return ipAddress.substring(0, ipAddress.length() - 1);
-	}
+    }
+    public static String subnetting(String input, String mask) {
+        byte[] inputByte = ip2Byte(input);
+        byte[] maskByte = ip2Byte(mask);
+        byte[] masking = new byte[4];
+        for(int idx = 0; idx < 4; idx++) {
+           masking[idx] = (byte) (inputByte[idx] & maskByte[idx]);
+        }
+        return ip2String(masking);
+    }
+    public static byte[] ip2Byte(String ip) {
+         String[] ipBuf = ip.split("\\.");
+         byte[] buf = new byte[4];
+         for(int i = 0; i < 4; i++) {
+            buf[i] = (byte) Integer.parseInt(ipBuf[i]);
+         }
+         return buf;
+    }
+    public static String ip2String(byte[] ip) {
+        String ipAddress = "";
+        for (byte b : ip) {
+           ipAddress += Integer.toString(b & 0xFF) + ".";
+        }
+        return ipAddress.substring(0, ipAddress.length() - 1);
+    }    
 }
