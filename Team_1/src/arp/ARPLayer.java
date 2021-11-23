@@ -2,12 +2,15 @@ package arp;
 
 import java.util.*;
 
+import javax.swing.table.DefaultTableModel;
+
 public class ARPLayer implements BaseLayer {
 	public int nUpperLayerCount = 0;
 	public BaseLayer p_UnderLayer = null;
 	public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
 	public String pLayerName = null;
 	RoutingDlg dlg;
+
 	public ARPLayer(String name) {
 		this.pLayerName = name;
 	}
@@ -52,7 +55,7 @@ public class ARPLayer implements BaseLayer {
 			Arrays.fill(arp_dstIP, (byte) 0x00);
 		}
 	}
-	
+
 	ARP_Header m_sHeader = new ARP_Header();
 
 	public String getIP_With_Dots(byte[] input) {
@@ -89,7 +92,7 @@ public class ARPLayer implements BaseLayer {
 		byte[] src_mac_address = Arrays.copyOfRange(input, 8, 14);
 		byte[] src_ip_address = Arrays.copyOfRange(input, 14, 18);
 		byte[] dst_ip_address = Arrays.copyOfRange(input, 24, 28);
-		
+
 		dlg = ((RoutingDlg) this.GetUnderLayer().GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0));
 		byte[] myIP = dlg.getMyIPAddress().getAddress(); // No intelligence copy
 
@@ -156,15 +159,15 @@ public class ARPLayer implements BaseLayer {
 			}
 
 			// 0x02 : ARP Reply => ARP를 받은 후 답장을 위한 부분
-			//	encapsulation
+			// encapsulation
 			byte[] response_arp = ObjToByte_Send(response_header, input, (byte) 0x02);
-			
-			//	Send ARP Reply
+
+			// Send ARP Reply
 			return this.GetUnderLayer().Send(response_arp, response_arp.length);
 		}
 
 		else if (opcode[0] == 0x00 && opcode[1] == 0x02) {// 내가 보낸 ARP 요청이 돌아옴 (상대방이 주소를 넣어서 보냄)
-            this.setTimer(src_ip_address, 1200000);
+			this.setTimer(src_ip_address, 1200000);
 
 			// table에서 IP가 같은것의 MAC주소를 갱신
 			for (int i = 0; i < dlg.dtm_ARP.getRowCount(); ++i) {
@@ -180,31 +183,32 @@ public class ARPLayer implements BaseLayer {
 
 		return false;
 	}
-    private void setTimer(byte[] src_ip_address, long time) {
-        Timer timer = new Timer(byteArrayToString(src_ip_address));
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
+
+	private void setTimer(byte[] src_ip_address, long time) {
+		Timer timer = new Timer(byteArrayToString(src_ip_address));
+		TimerTask task = new TimerTask() {
+			@Override
+			public void run() {
 //                arp_table.remove(Thread.currentThread().getName());
 //                ARPDlg.updateARPTableToGUI();
-            }
-        };
-        timer.schedule(task, time); // 10초로 지정
-    }
-    public static String byteArrayToString(byte[] addressByteArray) {
-        StringBuilder stringBuilder = new StringBuilder();
-        int lengthOfData = addressByteArray.length - 1;
-        for (int index = 0; index < lengthOfData; index++) {
-            stringBuilder.append(addressByteArray[index]).append(".");
-        }
+			}
+		};
+		timer.schedule(task, time); // 10초로 지정
+	}
 
-        stringBuilder.append(addressByteArray[lengthOfData]);
+	public static String byteArrayToString(byte[] addressByteArray) {
+		StringBuilder stringBuilder = new StringBuilder();
+		int lengthOfData = addressByteArray.length - 1;
+		for (int index = 0; index < lengthOfData; index++) {
+			stringBuilder.append(addressByteArray[index]).append(".");
+		}
 
-        return stringBuilder.toString();
-    }
+		stringBuilder.append(addressByteArray[lengthOfData]);
 
-    
-	public byte[] ObjToByte_Send(ARP_Header Header, byte[] input, byte opcode) {//검토
+		return stringBuilder.toString();
+	}
+
+	public byte[] ObjToByte_Send(ARP_Header Header, byte[] input, byte opcode) {// 검토
 		byte[] buf = new byte[input.length + 28]; // ARP Frame
 		byte[] src_mac = Header.arp_srcMAC;
 		byte[] src_ip = Header.arp_srcIP;
@@ -224,33 +228,83 @@ public class ARPLayer implements BaseLayer {
 		System.arraycopy(dst_mac, 0, buf, 18, 6);// 6바이트
 		System.arraycopy(dst_ip, 0, buf, 24, 4);// 4바이트
 		System.arraycopy(input, 0, buf, 28, input.length);
-		
+
 		return buf;
 	}
-	
-	public boolean Send(byte[] input, int length) {
-		byte[] dstIp = new byte[] { input[16], input[17], input[18], input[19] };
-		byte[] srcIp = new byte[] { input[12], input[13], input[14], input[15] };
-		
-		if (Arrays.equals(srcIp, dstIp)) {//GARP	
-			// srcMac = dlg.srcMac(바뀐 맥 주소)
-			dlg = ((RoutingDlg) this.GetUnderLayer().GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0));
-			byte[] bytes = new byte[6];
 
-			String[] macString = dlg.hwAddress.getText().split("\\-"); // Split the string array by "\\-"
-			for (int i = 0; i < 6; i++) {
-				bytes[i] = (byte) Integer.parseInt(macString[i], 16); // Cast the integers to byte
-			m_sHeader.arp_srcMAC = bytes;
-			}
-			SetDstIp(dstIp);
-			
-		} else {//ARP,PARP		
-			SetDstIp(dstIp);
-		}
+	public boolean Send(byte[] input, int length) {
+		byte[] bytes = null;
+		byte[] origin_dst_ip = new byte[] { input[16], input[17], input[18], input[19] };
+
+		SetSrcIp(ip2Byte(((NILayer) this.GetUnderLayer().GetUnderLayer()).getMyIpAddr()));
+		SetDstIp(origin_dst_ip);
+		SetSrcMac(((NILayer) this.GetUnderLayer().GetUnderLayer()).getMyMacAddr());
 		
-		byte[] temp = ObjToByte_Send(m_sHeader, input, (byte) 0x01);
-		
+		String[] macString = dlg.hwAddress.getText().split("\\-");
+		  for (int i = 0; i < 6; i++) { 
+			  
+			bytes[i] = (byte) Integer.parseInt(macString[i], 16); 
+		  m_sHeader.arp_srcMAC = bytes;
+		  } 
+		//SetDstMac(dstMac);
+
+		byte[] temp = ObjToByte_Send(m_sHeader, input, (byte) 0x03);//opcode?
+
 		return this.GetUnderLayer().Send(temp, length + 28);
+	}
+	 
+	//패킷으로 interface 의 주소를 가져오는 형태
+	/*
+	public boolean Send(byte[] input, int length, int interfaceNum) {
+		byte[] dstIp = new byte[] { input[16], input[17], input[18], input[19] };
+
+		SetSrcIp(ip2Byte(((NILayer) this.GetUnderLayer()).getMyIpAddr()));
+		SetDstIp(dstIp);
+
+		byte[] temp = ObjToByte_Send(m_sHeader, input, (byte) 0x01);
+
+		return this.GetUnderLayer().Send(temp, length + 28);
+	}
+	*/
+	
+	public boolean SendForRouting(byte[] input, int length) {
+		byte[] bytes = null;
+		byte[] origin_dst_ip = new byte[] { input[16], input[17], input[18], input[19] };
+
+		SetSrcIp(ip2Byte(((NILayer) this.GetUnderLayer().GetUnderLayer()).getMyIpAddr()));
+		SetDstIp(origin_dst_ip);
+		SetSrcMac(((NILayer) this.GetUnderLayer().GetUnderLayer()).getMyMacAddr());
+		
+		DefaultTableModel dtm_arp = ((RoutingDlg) this.GetUpperLayer(0).GetUpperLayer(0)).dtm_ARP;
+		
+		for(int i=0; i < dtm_arp.getRowCount(); ++i) {
+			String ip_addr = (String) dtm_arp.getValueAt(i, 0);
+			if(ip_addr == ip2String(origin_dst_ip)) {
+				SetDstMac(ip2Byte((String) dtm_arp.getValueAt(i, 1)));
+				break;
+			} 
+		}
+
+		byte[] temp = ObjToByte_Send(m_sHeader, input, (byte) 0x03);//opcode?
+
+		return this.GetUnderLayer().Send(temp, length + 28);
+	}
+
+	public static byte[] ip2Byte(String ip) {
+		String[] ipBuf = ip.split("\\.");
+		byte[] buf = new byte[4];
+		for (int i = 0; i < 4; i++) {
+			buf[i] = (byte) Integer.parseInt(ipBuf[i]);
+		}
+		return buf;
+	}
+
+	public static String ip2String(byte[] ip) {
+		String ipAddress = "";
+		for (byte b : ip) {
+			ipAddress += Integer.toString(b & 0xFF) + ".";
+		}
+		return ipAddress.substring(0, ipAddress.length() - 1);
 	}
 
 	public void SetOpcode(byte[] opcode) {

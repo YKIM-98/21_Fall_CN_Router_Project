@@ -37,6 +37,8 @@ import javax.swing.border.MatteBorder;
 
 
 public class RoutingDlg extends JFrame implements BaseLayer {
+	
+
 	public int nUpperLayerCount = 0;
 	public int nUnderLayerCount = 0;	
 	public String pLayerName = null;
@@ -136,7 +138,8 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		niLayer[1] = new NILayer("NI1");
 		m_LayerMgr.AddLayer(niLayer[1]);
 
-//		m_LayerMgr.ConnectLayers(" NI0 ( *Ethernet0 ( *Ip0 ( *Routing ) *Arp0 )");
+
+		//m_LayerMgr.ConnectLayers(" NI0 ( *Ethernet0 ( *Ip0 ( *Routing ) *Arp0 )");
 		m_LayerMgr.GetLayer("NI0").SetUpperLayer(m_LayerMgr.GetLayer("Ethernet0"));
 		m_LayerMgr.GetLayer("Ethernet0").SetUpperLayer(m_LayerMgr.GetLayer("Ip0"));
 		m_LayerMgr.GetLayer("Ethernet0").SetUpperLayer(m_LayerMgr.GetLayer("Arp0"));
@@ -157,6 +160,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		m_LayerMgr.GetLayer("Arp1").SetUnderLayer((m_LayerMgr.GetLayer("Ethernet1")));
 		m_LayerMgr.GetLayer("Ethernet1").SetUnderLayer((m_LayerMgr.GetLayer("NI1")));
 		
+
 	}
 	
 	//	For the purpose of table edit.
@@ -402,6 +406,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 				selected_index1 = NIC_Set_combobox1.getSelectedIndex();
 				selected_index2 = NIC_Set_combobox2.getSelectedIndex();
 //				srcMacAddress.setText("");
+
 				((NILayer) m_LayerMgr.GetLayer("NI0")).SetAdapterNumber(selected_index1);
 				((NILayer) m_LayerMgr.GetLayer("NI1")).SetAdapterNumber(selected_index2);
 
@@ -414,6 +419,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 //						+ tmpIP1[3].substring(0, tmpIP1[3].length() - 1);
 //				byte[] Interface0IP = RoutingDlg.ip2Byte(ipString1);
 //				System.out.println("interface IP 0: "+ ipString1);
+
 				
 				// interface1 byte형  ip 생성
 //				String[] tmpIP2 = ((NILayer) m_LayerMgr.GetLayer("NI0")).m_pAdapterList.get(selected_index2).getAddresses().get(0).getAddr().toString().split("\\.");
@@ -867,6 +873,15 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		ChattingArea.append("[RECV] : " + Text + "\n");
 		return false;
 	}
+	
+	public int findInterface(int interfaceNum) {
+		if(selected_index1 == interfaceNum) {
+			return 0;
+		}
+		else {
+			return 1;
+		}
+	}
 
 	@Override
 	public void SetUnderLayer(BaseLayer pUnderLayer) {
@@ -946,6 +961,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 	public String getInputARPIP(){
 		return inputARPIP;
 	}
+
 	// port Number를 받아 해당 Network Card의 Mac Address를 가져오는 함수
 //    public static String getMacAddress(int portNum, BaseLayer layer) {
 //        byte[] macAddress = null;
@@ -972,6 +988,10 @@ public class RoutingDlg extends JFrame implements BaseLayer {
         }
         return buf;
      }
+	
+	public JTable getTable_Routing_Cache() {
+		return Table_Routing_Cache;
+	}
 
 }
 

@@ -1,14 +1,20 @@
 package arp;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 
 import org.jnetpcap.ByteBufferHandler;
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapIf;
+import org.jnetpcap.PcapSockAddr;
 import org.jnetpcap.packet.PcapPacket;
 import org.jnetpcap.packet.PcapPacketHandler;
 
@@ -75,6 +81,24 @@ public class NILayer implements BaseLayer {
 		obj.start();
 
 		return false;
+	}
+	
+	public String getMyIpAddr() {//Adapter_Object Ip_Addr 출력 (IPv4, IPv6 주의)
+		String myIp = "";
+		myIp = GetAdapterObject(m_iNumAdapter).getAddresses().get(0).getAddr().toString();		
+		myIp = myIp.substring(7, myIp.length()-1);			      	   
+		return myIp;
+	}
+	
+	public byte[] getMyMacAddr() {
+		byte[] myMac = null;
+		try {
+			myMac = GetAdapterObject(m_iNumAdapter).getHardwareAddress();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}					      	   
+		return myMac;
 	}
 
 	@Override

@@ -4,114 +4,136 @@ import arp.BaseLayer;
 
 import java.util.ArrayList;
 
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
-public class IPLayer implements BaseLayer{
+public class IPLayer implements BaseLayer {
 	public int nUpperLayerCount = 0;
-    public int nUnderLayerCount = 0;
-    public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<BaseLayer>();
-    public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();    
+	public int nUnderLayerCount = 0;
+	public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<BaseLayer>();
+	public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
 	public String pLayerName = null;
 	private _IP_Header ip_header = new _IP_Header();
+	private boolean isRouting = false;
 	RoutingDlg dlg;
 
-	public IPLayer(String pName){
+	public IPLayer(String pName) {
 		pLayerName = pName;
 	}
-	
-    private class _IP_Header {      
-        byte ip_verlen; // ip version (1byte)
-        byte ip_tos; // type of service (1byte)
-        short ip_len; // total packet length (2byte)
-        short ip_id; // datagram id	(2byte)
-        short ip_fragoff;// fragment offset (2byte)
-        byte ip_ttl; // time to live in gateway hops(1byte)
-        byte ip_proto; // IP protocol (1byte)
-        short ip_cksum; // header checksum (2byte)
 
-        _IP_ADDR ip_srcaddr;// src IP address (4byte)
-        _IP_ADDR ip_dstaddr;// dst IP address (4byte)
-        
-        private _IP_Header() {    
-            this.ip_verlen = 0x04; 	// IPV4 - 0x04
-            this.ip_tos = 0x00;
-            this.ip_len = 0;
-            this.ip_id = 0;
-            this.ip_fragoff = 0;
-            this.ip_ttl = 0x00;
-            this.ip_proto = 0x06;
-            this.ip_cksum = 0;
-            this.ip_srcaddr = new _IP_ADDR();
-            this.ip_dstaddr = new _IP_ADDR();
-        }
+	private class _IP_Header {
+		byte ip_verlen; // ip version (1byte)
+		byte ip_tos; // type of service (1byte)
+		short ip_len; // total packet length (2byte)
+		short ip_id; // datagram id (2byte)
+		short ip_fragoff;// fragment offset (2byte)
+		byte ip_ttl; // time to live in gateway hops(1byte)
+		byte ip_proto; // IP protocol (1byte)
+		short ip_cksum; // header checksum (2byte)
 
-        private class _IP_ADDR {
-            private byte[] addr = new byte[4];
+		_IP_ADDR ip_srcaddr;// src IP address (4byte)
+		_IP_ADDR ip_dstaddr;// dst IP address (4byte)
 
-            public _IP_ADDR() {
-                this.addr[0] = 0x00;
-                this.addr[1] = 0x00;
-                this.addr[2] = 0x00;
-                this.addr[3] = 0x00;
-            }
-        }
-    }
-	
-	public boolean Send(byte[] input, int length){
-		int resultLength = input.length;
-	    this.ip_header.ip_dstaddr.addr = new byte[4];
-		this.ip_header.ip_srcaddr.addr = new byte[4];
-		dlg = ((RoutingDlg) this.GetUpperLayer(0));
-		
-		byte [] my_ip = dlg.getMyIPAddress().getAddress();
-		SetIpSrcAddress(my_ip);
-		if (length == -2) { // GARP
-		    SetIpDstAddress(my_ip);
-		} else {
-			if (dlg.ARPorChat.equals("ARP")){ // ARP
-				String InputARPIP = dlg.getInputARPIP();
-				byte[] dstAddressToByte = new byte[4];
-				String[] byte_dst = InputARPIP.split("\\.");
-				
-				for (int i = 0; i < 4; i++) {
-					dstAddressToByte[i] = (byte) Integer.parseInt(byte_dst[i], 16);
-				}
-				
-				SetIpDstAddress(dstAddressToByte);
-			}
-			else{	//data
-				SetIpDstAddress(dlg.getTargetIPAddress());
-				byte[] temp = ObjToByte20(this.ip_header, input, resultLength);
-				byte[] sumIpheader = new byte[28+temp.length];
-				System.arraycopy(temp, 0, sumIpheader, 28, temp.length);
-				return this.GetUnderLayer(0).Send(sumIpheader , sumIpheader.length);	
+		private _IP_Header() {
+			this.ip_verlen = 0x04; // IPV4 - 0x04
+			this.ip_tos = 0x00;
+			this.ip_len = 0;
+			this.ip_id = 0;
+			this.ip_fragoff = 0;
+			this.ip_ttl = 0x00;
+			this.ip_proto = 0x06;
+			this.ip_cksum = 0;
+			this.ip_srcaddr = new _IP_ADDR();
+			this.ip_dstaddr = new _IP_ADDR();
+		}
+
+		private class _IP_ADDR {
+			private byte[] addr = new byte[4];
+
+			public _IP_ADDR() {
+				this.addr[0] = 0x00;
+				this.addr[1] = 0x00;
+				this.addr[2] = 0x00;
+				this.addr[3] = 0x00;
 			}
 		}
-		byte[] temp = ObjToByte20(this.ip_header, input, resultLength);
-		
-		return this.GetUnderLayer(1).Send(temp, resultLength + 20);	
 	}
-	
+
+	public boolean Send(byte[] input, int length) {
+		int resultLength = input.length;
+
+		//확인할 것
+		dlg = ((RoutingDlg) this.GetUpperLayer(0));
+		NILayer ni = (NILayer) this.GetUnderLayer().GetUnderLayer().GetUnderLayer();
+		
+		if (isRouting) {// Routing
+			this.GetUnderLayer(0).Send(input, length);
+			isRouting = false;
+			byte[] temp = ObjToByte20(this.ip_header, input, resultLength);
+			return this.GetUnderLayer().SendForRouting(temp, resultLength + 20);
+			
+		} else if (dlg.ARPorChat.equals("ARP")) {
+			this.ip_header.ip_dstaddr.addr = new byte[4];
+			this.ip_header.ip_srcaddr.addr = new byte[4];
+			SetIpSrcAddress(ip2Byte(ni.getMyIpAddr()));
+			
+			String InputARPIP = dlg.getInputARPIP();
+			byte[] dstAddressToByte = new byte[4];
+			String[] byte_dst = InputARPIP.split("\\.");
+
+			for (int i = 0; i < 4; i++) {
+				dstAddressToByte[i] = (byte) Integer.parseInt(byte_dst[i], 16);
+			}
+
+			SetIpDstAddress(dstAddressToByte);
+			byte[] temp = ObjToByte20(this.ip_header, input, resultLength);
+			return this.GetUnderLayer().Send(temp, resultLength + 20);
+		}
+		return false;
+	}
+
 	private byte[] ObjToByte20(_IP_Header ip_header, byte[] input, int length) { // 헤더 추가부분
 		byte[] buf = new byte[length + 20];
-        buf[0] = ip_header.ip_verlen;
-        buf[1] = ip_header.ip_tos;
-        buf[2] = (byte) (((length + 20) >> 8) & 0xFF);
-        buf[3] = (byte) ((length + 20) & 0xFF);
-        buf[4] = (byte) ((ip_header.ip_id >> 8) & 0xFF);
-        buf[5] = (byte) (ip_header.ip_id & 0xFF);
-        buf[6] = (byte) ((ip_header.ip_fragoff >> 8) & 0xFF);
-        buf[7] = (byte) (ip_header.ip_fragoff & 0xFF);
-        buf[8] = ip_header.ip_ttl;
-        buf[9] = ip_header.ip_proto;
-        buf[10] = (byte) ((ip_header.ip_cksum >> 8) & 0xFF);
-        buf[11] = (byte) (ip_header.ip_cksum & 0xFF);
-        System.arraycopy(ip_header.ip_srcaddr.addr, 0, buf, 12, 4);
-        System.arraycopy(ip_header.ip_dstaddr.addr, 0, buf, 16, 4);
-        System.arraycopy(input, 0, buf, 20, length);
-        return buf;	
+
+		buf[0] = ip_header.ip_verlen;
+		buf[1] = ip_header.ip_tos;
+		buf[2] = (byte) (((length + 20) >> 8) & 0xFF);
+		buf[3] = (byte) ((length + 20) & 0xFF);
+		buf[4] = (byte) ((ip_header.ip_id >> 8) & 0xFF);
+		buf[5] = (byte) (ip_header.ip_id & 0xFF);
+		buf[6] = (byte) ((ip_header.ip_fragoff >> 8) & 0xFF);
+		buf[7] = (byte) (ip_header.ip_fragoff & 0xFF);
+		buf[8] = ip_header.ip_ttl;
+		buf[9] = ip_header.ip_proto;
+		buf[10] = (byte) ((ip_header.ip_cksum >> 8) & 0xFF);
+		buf[11] = (byte) (ip_header.ip_cksum & 0xFF);
+		System.arraycopy(ip_header.ip_srcaddr.addr, 0, buf, 12, 4);
+		System.arraycopy(ip_header.ip_dstaddr.addr, 0, buf, 16, 4);
+		System.arraycopy(input, 0, buf, 20, length);
+		return buf;
 	}
-	
+
+	public void routing(byte[] input, int length) {
+		DefaultTableModel dtm_routing = ((RoutingDlg) this.GetUpperLayer(0)).dtm_Routing;
+		byte[] dstIp = new byte[] { input[16], input[17], input[18], input[19] };
+
+		for (int i = 0; i < dtm_routing.getRowCount(); ++i) {
+			String subnetting_dst_addr = subnetting(ip2String(dstIp), (String) dtm_routing.getValueAt(i, 1));
+
+			if ((String) dtm_routing.getValueAt(i, 0) == subnetting_dst_addr) {
+				String flag = (String) dtm_routing.getValueAt(i, 3);
+				RoutingDlg dlg = (RoutingDlg) this.GetUpperLayer(0);
+
+				if (flag.equals("UH")) {
+					isRouting = true;
+					dlg.ipLayer[dlg.findInterface((int) dtm_routing.getValueAt(i, 4))].Send(input, length);
+				}
+			}
+		}
+	}
+
 	public synchronized boolean Receive(byte[] input) {
+
 		byte[] srcIp = new byte[4];
 		byte[] dstIp = new byte[4];
 		System.arraycopy(input, 12, srcIp, 0, 4);
@@ -184,6 +206,7 @@ public class IPLayer implements BaseLayer{
         return temp;
     }
 	
+
 	@Override
 	public String GetLayerName() {
 		return pLayerName;
@@ -195,34 +218,35 @@ public class IPLayer implements BaseLayer{
 	}
 
 	public BaseLayer GetUnderLayer(int nindex) {
-        if (nindex < 0 || nindex > nUnderLayerCount || nUnderLayerCount < 0)
-            return null;
-        return p_aUnderLayer.get(nindex);
+		if (nindex < 0 || nindex > nUnderLayerCount || nUnderLayerCount < 0)
+			return null;
+		return p_aUnderLayer.get(nindex);
 	}
 
 	@Override
 	public BaseLayer GetUpperLayer(int nindex) {
-        if (nindex < 0 || nindex > nUnderLayerCount || nUnderLayerCount < 0)
-            return null;
-        return p_aUpperLayer.get(nindex);
+		if (nindex < 0 || nindex > nUnderLayerCount || nUnderLayerCount < 0)
+			return null;
+		return p_aUpperLayer.get(nindex);
 	}
 
 	@Override
 	public void SetUnderLayer(BaseLayer pUnderLayer) {
-        if (pUnderLayer == null)
-            return;
-        this.p_aUnderLayer.add(nUnderLayerCount++, pUnderLayer);
+		if (pUnderLayer == null)
+			return;
+		this.p_aUnderLayer.add(nUnderLayerCount++, pUnderLayer);
 	}
 
 	@Override
 	public void SetUpperLayer(BaseLayer pUpperLayer) {
-        if (pUpperLayer == null)
-            return;
-        this.p_aUpperLayer.add(nUpperLayerCount++, pUpperLayer);
+		if (pUpperLayer == null)
+			return;
+		this.p_aUpperLayer.add(nUpperLayerCount++, pUpperLayer);
 	}
 
 	@Override
 	public void SetUpperUnderLayer(BaseLayer pUULayer) {
+
         this.SetUpperLayer(pUULayer);
         pUULayer.SetUnderLayer(this);		
 	}
