@@ -111,7 +111,18 @@ public class IPLayer implements BaseLayer{
         return buf;	
 	}
 	
-	public synchronized boolean Receive(byte[] input) {	
+	public synchronized boolean Receive(byte[] input) {
+		byte[] srcIp = new byte[4];
+		byte[] dstIp = new byte[4];
+		System.arraycopy(input, 12, srcIp, 0, 4);
+		System.arraycopy(input, 16, dstIp, 0, 4);
+		String srcIpStr = ip2String(srcIp);
+		String dstIpStr = ip2String(dstIp);
+
+		// ignore noise
+		if(dstIpStr.equals("239.255.255.250"))
+			return false;
+		
 		if (((input[6] == 0) && (input[7]==0))){
 	        byte[] temp = new byte[input.length - 28];
 	        System.arraycopy(input, 28, temp, 0, input.length - 28);	     
@@ -128,7 +139,7 @@ public class IPLayer implements BaseLayer{
             if (my_ip_address[addr_index_count] != input[16 + addr_index_count]) {
                 return this.GetUnderLayer(0).Send(input, packet_tot_len);
             }
-        }// PARP
+        }	// PARP
         
         if (input[9] == 0x06) {//IP Protocol이  0x06 TCP Layer 인지 판별
             return this.GetUpperLayer(0).Receive(removeIpHeader(input));
