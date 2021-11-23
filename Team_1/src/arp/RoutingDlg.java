@@ -36,6 +36,8 @@ import javax.swing.border.MatteBorder;
 
 
 public class RoutingDlg extends JFrame implements BaseLayer {
+	
+
 	public int nUpperLayerCount = 0;
 	public String pLayerName = null;
 	public BaseLayer p_UnderLayer = null;
@@ -453,8 +455,8 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 				selected_index1 = NIC_Set_combobox1.getSelectedIndex();
 				selected_index2 = NIC_Set_combobox2.getSelectedIndex();
 //				srcMacAddress.setText("");
-				((NILayer) m_LayerMgr.GetLayer("NI0")).SetAdapterNumber(selected_index1);
-				((NILayer) m_LayerMgr.GetLayer("NI1")).SetAdapterNumber(selected_index2);
+				((NILayer) m_LayerMgr.GetLayer("NI0")).SetAdapterNumber(selected_index1);				
+				((NILayer) m_LayerMgr.GetLayer("NI1")).SetAdapterNumber(selected_index2);			
 				
 //				JTextField jtf = (JTextField) NIC_combobox1.getEditor().getEditorComponent();
 //				jtf.setEditable(false);
@@ -834,7 +836,7 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 				if(isGateway) tmpCheckBox += "G";
 				if(isHost) tmpCheckBox += "H";
 				inputString[3] = tmpCheckBox;
-				inputString[4] = NIC_combobox_add2Table.getSelectedItem().toString();
+				inputString[4] = Integer.toString(NIC_combobox_add2Table.getSelectedIndex());
 				inputString[5] = "1(hard coded)";
 				
 				dtm_Routing.addRow(inputString); // Add a row with values.
@@ -891,6 +893,15 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 		String Text = new String(data);
 		ChattingArea.append("[RECV] : " + Text + "\n");
 		return false;
+	}
+	
+	public int findInterface(int interfaceNum) {
+		if(selected_index1 == interfaceNum) {
+			return 0;
+		}
+		else {
+			return 1;
+		}
 	}
 
 	@Override
@@ -962,5 +973,9 @@ public class RoutingDlg extends JFrame implements BaseLayer {
 	
 	public String getInputARPIP(){
 		return inputARPIP;
+	}
+	
+	public JTable getTable_Routing_Cache() {
+		return Table_Routing_Cache;
 	}
 }

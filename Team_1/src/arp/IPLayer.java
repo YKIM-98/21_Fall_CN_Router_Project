@@ -4,6 +4,9 @@ import arp.BaseLayer;
 
 import java.util.ArrayList;
 
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+
 public class IPLayer implements BaseLayer {
 	public int nUpperLayerCount = 0;
 	public int nUnderLayerCount = 0;
@@ -11,6 +14,7 @@ public class IPLayer implements BaseLayer {
 	public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
 	public String pLayerName = null;
 	private _IP_Header ip_header = new _IP_Header();
+	private boolean isRouting = false;
 	RoutingDlg dlg;
 
 	public IPLayer(String pName) {
@@ -54,42 +58,39 @@ public class IPLayer implements BaseLayer {
 			}
 		}
 	}
-/*
-	public boolean Send(byte[] input, int length) { // 필요 X
+
+	public boolean Send(byte[] input, int length) {
 		int resultLength = input.length;
-		this.ip_header.ip_dstaddr.addr = new byte[4];
-		this.ip_header.ip_srcaddr.addr = new byte[4];
-		dlg = ((RoutingDlg) this.GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0));
 
-		byte[] my_ip = dlg.getMyIPAddress().getAddress();
-		SetIpSrcAddress(my_ip);
-		if (length == -2) { // GARP
-			SetIpDstAddress(my_ip);
+		//확인할 것
+		dlg = ((RoutingDlg) this.GetUpperLayer(0));
+		NILayer ni = (NILayer) this.GetUnderLayer().GetUnderLayer().GetUnderLayer();
+		
+		if (isRouting) {// Routing
+			this.GetUnderLayer(0).Send(input, length);
 
-		} else {
-			if (dlg.ARPorChat.equals("ARP")) {
-				String InputARPIP = dlg.getInputARPIP();
-				byte[] dstAddressToByte = new byte[4];
-				String[] byte_dst = InputARPIP.split("\\.");
+			isRouting = false;
+			
+		} else if (dlg.ARPorChat.equals("ARP")) {
+			this.ip_header.ip_dstaddr.addr = new byte[4];
+			this.ip_header.ip_srcaddr.addr = new byte[4];
+			SetIpSrcAddress(ip2Byte(ni.getMyIpAddr()));
+			
+			String InputARPIP = dlg.getInputARPIP();
+			byte[] dstAddressToByte = new byte[4];
+			String[] byte_dst = InputARPIP.split("\\.");
 
-				for (int i = 0; i < 4; i++) {
-					dstAddressToByte[i] = (byte) Integer.parseInt(byte_dst[i], 16);
-				}
-
-				SetIpDstAddress(dstAddressToByte);
-			} else { // data
-				SetIpDstAddress(dlg.getTargetIPAddress());
-				byte[] temp = ObjToByte20(this.ip_header, input, resultLength);
-				byte[] sumIpheader = new byte[28 + temp.length];
-				System.arraycopy(temp, 0, sumIpheader, 28, temp.length);
-				return this.GetUnderLayer(0).Send(sumIpheader, sumIpheader.length);
+			for (int i = 0; i < 4; i++) {
+				dstAddressToByte[i] = (byte) Integer.parseInt(byte_dst[i], 16);
 			}
+
+			SetIpDstAddress(dstAddressToByte);
 		}
+
 		byte[] temp = ObjToByte20(this.ip_header, input, resultLength);
 
 		return this.GetUnderLayer(1).Send(temp, resultLength + 20);
 	}
-	*/
 
 	private byte[] ObjToByte20(_IP_Header ip_header, byte[] input, int length) { // 헤더 추가부분
 		byte[] buf = new byte[length + 20];
@@ -110,10 +111,24 @@ public class IPLayer implements BaseLayer {
 		System.arraycopy(input, 0, buf, 20, length);
 		return buf;
 	}
-	
-	public boolean Send(byte[] input, int length, int interfaceNum) {
-		
-		return this.GetUnderLayer(1).Send(input, input.length);
+
+	public void routing(byte[] input, int length) {
+		DefaultTableModel dtm_routing = ((RoutingDlg) this.GetUpperLayer(0)).dtm_Routing;
+		byte[] dstIp = new byte[] { input[16], input[17], input[18], input[19] };
+
+		for (int i = 0; i < dtm_routing.getRowCount(); ++i) {
+			String subnetting_dst_addr = subnetting(ip2String(dstIp), (String) dtm_routing.getValueAt(i, 1));
+
+			if ((String) dtm_routing.getValueAt(i, 0) == subnetting_dst_addr) {
+				String flag = (String) dtm_routing.getValueAt(i, 3);
+				RoutingDlg dlg = (RoutingDlg) this.GetUpperLayer(0);
+
+				if (flag.equals("UH")) {
+					isRouting = true;
+					dlg.ipLayer[dlg.findInterface((int) dtm_routing.getValueAt(i, 4))].Send(input, length);
+				}
+			}
+		}
 	}
 
 	public synchronized boolean Receive(byte[] input) {
